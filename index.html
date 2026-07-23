@@ -93,6 +93,18 @@
   }
   html.dark body::before { mix-blend-mode: screen; opacity: 0.075; }
 
+  /* Blueprint grid overlay — full viewport, blend-difference (echoes haoqi.design) */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    width: 100%;
+    height: 100%;
+  }
+  .grid-overlay svg { display: block; width: 100%; height: 100%; shape-rendering: crispEdges; }
+
   a { color: inherit; text-decoration: none; }
   ::selection { background: var(--accent); color: var(--paper); }
 
@@ -556,6 +568,18 @@
 </style>
 </head>
 <body>
+
+<!-- ==================================================== BLUEPRINT GRID OVERLAY ==================================================== -->
+<div class="grid-overlay" aria-hidden="true">
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="none">
+    <!-- Main vertical rules · 4 columns · split into 3 rows at y=300 (with 24px gap) and y=612 -->
+    <path d="M56.5 0V288M499.5 0V288M941.5 0V288M1384.5 0V288M56.5 312V600M499.5 312V600M941.5 312V600M1384.5 312V600M56.5 624V900M499.5 624V900M941.5 624V900M1384.5 624V900" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/>
+    <!-- Horizontal separators at y=300 and y=612 with 4 gaps for the verticals to pass through -->
+    <path d="M0 300H44.5M68.5 300H487.5M511.5 300H929.5M953.5 300H1372.5M1396.5 300H1440M0 612H44.5M68.5 612H487.5M511.5 612H929.5M953.5 612H1372.5M1396.5 612H1440" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/>
+    <!-- Crosshair marks at each grid intersection -->
+    <path d="M56.5 294V306M50.5 300H62.5M56.5 606V618M50.5 612H62.5M499.5 294V306M493.5 300H505.5M499.5 606V618M493.5 612H505.5M941.5 294V306M935.5 300H947.5M941.5 606V618M935.5 612H947.5M1384.5 294V306M1378.5 300H1390.5M1384.5 606V618M1378.5 612H1390.5" stroke="#FFFFFF" stroke-width="1" fill="none" opacity="0.4" vector-effect="non-scaling-stroke"/>
+  </svg>
+</div>
 
 <!-- ==================================================== HUD FRAME ==================================================== -->
 <div class="hud" role="banner" aria-label="Site chrome">
