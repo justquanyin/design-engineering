@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="system">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quan Yin — Design × Engineering</title>
-<meta name="description" content="Quan Yin. Design engineering & AI-native tooling for design systems. Owner of Theme Store and the Water Figma plugin." />
+<title>Quan Yin — Water, a design system</title>
+<meta name="description" content="A design-engineering case study: Water — the design system I build, and the tooling that makes it disappear into the workflow." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   /* ═══════════════════════════════════════════════ TOKENS ═══════════════════════════════════════════════ */
-
   html.light, html.system {
     color-scheme: light;
     --label: 0, 0, 0;
@@ -48,15 +47,15 @@
     --line: rgba(var(--label-d), 0.1);
     --bg: rgb(var(--background-deep));
     --bg-elevated: var(--background-elevated);
-
     --cubic-66: cubic-bezier(0.66, 0, 0.01, 1);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
   }
 
   /* ═══════════════════════════════════════════════ RESET / BASE ═══════════════════════════════════════════════ */
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-  html { scroll-behavior: smooth; }
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-stopped { overflow: hidden; }
   body {
     background: var(--bg);
     color: var(--label-1);
@@ -70,485 +69,226 @@
   ::selection { background: var(--selection); color: #0A0A0A; }
   a { color: inherit; text-decoration: none; }
   a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
-    outline: 1.5px solid var(--label-1);
-    outline-offset: 3px;
+    outline: 1.5px solid var(--label-1); outline-offset: 3px;
   }
 
-  /* Utility fonts */
-  .font-sans { font-family: 'Space Grotesk', sans-serif; }
-  .font-flex { font-family: 'Roboto Flex', 'Space Grotesk', sans-serif; }
   .font-serif { font-family: 'Instrument Serif', 'Times New Roman', serif; letter-spacing: -0.005em; }
   .font-serif-italic { font-family: 'Instrument Serif', serif; font-style: italic; letter-spacing: -0.015em; }
   .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+  em.serif { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; font-variation-settings: normal; color: var(--accent); }
+
+  /* Halftone dot-matrix background canvas (replicates haoqi MaskedDotsEffect) */
+  #dots {
+    position: fixed; inset: 0; z-index: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
 
   /* Grain */
-  body::before {
+  body::after {
     content: '';
     position: fixed; inset: 0; z-index: 200; pointer-events: none;
     opacity: 0.055;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     mix-blend-mode: multiply;
   }
-  html.dark body::before, html.system body::before { mix-blend-mode: screen; opacity: 0.075; }
-  @media (prefers-color-scheme: dark) { html.system body::before { mix-blend-mode: screen; opacity: 0.075; } }
+  html.dark body::after, html.system body::after { mix-blend-mode: screen; opacity: 0.075; }
+  @media (prefers-color-scheme: dark) { html.system body::after { mix-blend-mode: screen; opacity: 0.075; } }
 
-  /* Blueprint grid overlay (mix-blend-difference) — from haoqi.design */
+  /* Blueprint grid overlay */
   .grid-overlay {
-    position: fixed; inset: 0; z-index: 20; pointer-events: none;
-    mix-blend-mode: difference;
-    width: 100%; height: 100%;
+    position: fixed; inset: 0; z-index: 21; pointer-events: none;
+    mix-blend-mode: difference; width: 100%; height: 100%;
   }
   .grid-overlay svg { display: block; width: 100%; height: 100%; shape-rendering: crispEdges; }
 
+  /* Content sits above canvas */
+  .hud, main, footer { position: relative; z-index: 22; }
+  .hud { z-index: 50; }
+
   /* ═══════════════════════════════════════════════ HUD FRAME ═══════════════════════════════════════════════ */
-
   .hud {
-    position: fixed; inset: 0; z-index: 50;
-    pointer-events: none;
+    position: fixed; inset: 0; z-index: 50; pointer-events: none;
     display: flex; flex-direction: column; justify-content: space-between;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: var(--label-1);
-    transition: color 300ms var(--ease-out);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    letter-spacing: 0.02em; text-transform: uppercase;
+    color: var(--label-1); transition: color 300ms var(--ease-out);
   }
-  .hud-row {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    padding: 16px 20px;
-  }
+  .hud-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px; }
   @media (min-width: 1024px) { .hud-row { padding: 28px 56px; } }
-
-  /* HUD button with dotted-border hover box (signature haoqi detail) */
   .hud-btn {
-    position: relative;
-    padding: 8px;
-    background: transparent; border: none; font: inherit; color: inherit;
-    letter-spacing: inherit; text-transform: inherit;
-    cursor: pointer;
-    pointer-events: auto;
-    display: inline-block;
+    position: relative; padding: 8px; background: transparent; border: none;
+    font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
+    cursor: pointer; pointer-events: auto; display: inline-block;
   }
   .hud-btn::before {
-    content: '';
-    position: absolute; inset: 0;
-    border: 2px dotted transparent;
-    transition: border-color 200ms var(--ease-out);
-    pointer-events: none;
+    content: ''; position: absolute; inset: 0; border: 2px dotted transparent;
+    transition: border-color 200ms var(--ease-out); pointer-events: none;
   }
-  @media (hover: hover) {
-    .hud-btn:hover::before { border-color: var(--label-1); }
-  }
-
+  @media (hover: hover) { .hud-btn:hover::before { border-color: var(--label-1); } }
   .hud-group { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
-  .hud-brand {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-variation-settings: "wdth" 120;
-    text-transform: uppercase;
-  }
-  .hud-coord {
-    /* bottom-center per haoqi */
-    position: fixed;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
-    pointer-events: auto;
-  }
+  .hud-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-variation-settings: "wdth" 120; text-transform: uppercase; }
+  .hud-coord { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); pointer-events: auto; }
   @media (min-width: 1024px) { .hud-coord { bottom: 28px; } }
+  .hud-hide-sm { display: none; }
+  @media (min-width: 1024px) { .hud-hide-sm { display: inline-block; } }
 
-  /* Scroll indicator on right edge (haoqi.design signature) */
   .scroll-indicator {
-    position: fixed; top: 50%; right: 0; transform: translateY(-50%);
-    z-index: 30;
-    width: 56px; height: 200px;
-    padding: 0 12px;
-    pointer-events: none;
-    display: none;
+    position: fixed; top: 50%; right: 0; transform: translateY(-50%); z-index: 30;
+    width: 56px; height: 200px; padding: 0 12px; pointer-events: none; display: none;
+    color: var(--label-1); mix-blend-mode: difference;
   }
   @media (min-width: 1024px) { .scroll-indicator { display: block; } }
   .scroll-indicator svg { display: block; }
-
-  /* HUD right-side loop indicator (currently making state) */
   .loop-indicator svg { display: block; }
 
   /* ═══════════════════════════════════════════════ LAYOUT ═══════════════════════════════════════════════ */
-
-  main { padding-top: 96px; padding-bottom: 96px; }
-  @media (min-width: 1024px) { main { padding-top: 128px; padding-bottom: 128px; } }
-
-  .container-outer {
-    padding: 0 16px;
-    max-width: 100%;
-  }
+  main { padding-top: 96px; }
+  @media (min-width: 1024px) { main { padding-top: 128px; } }
+  .container-outer { padding: 0 16px; max-width: 100%; }
   @media (min-width: 1024px) { .container-outer { padding: 0 56px; } }
 
-  .grid-12 {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 8px;
-    width: 100%;
-  }
-  .p2 { padding: 8px; }
-
   /* ═══════════════════════════════════════════════ HERO ═══════════════════════════════════════════════ */
-
-  .hero {
-    padding: 24px 0 96px;
-    min-height: calc(100vh - 190px);
-    display: flex; align-items: flex-end;
-  }
+  .hero { padding: 24px 0 96px; min-height: calc(100vh - 200px); display: flex; align-items: flex-end; }
   @media (min-width: 1024px) { .hero { padding: 48px 0 96px; } }
-
-  .hero-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto 1fr;
-    gap: 24px;
-    width: 100%;
-  }
+  .hero-grid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); grid-template-rows: auto 1fr; gap: 24px; width: 100%; }
   .hero-meta { grid-column: span 12; display: flex; flex-direction: column; gap: 16px; }
-  @media (min-width: 1024px) {
-    .hero-meta { grid-column: span 12; display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; }
-  }
-  .hero-meta-a {
-    display: none;
-    padding: 8px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
-    font-size: clamp(24px, 3svw, 30px);
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-  }
-  @media (min-width: 1024px) {
-    .hero-meta-a { display: block; grid-column: 1 / span 3; }
-  }
-  .hero-meta-b {
-    display: none;
-    padding: 8px;
-    color: var(--label-2);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    line-height: 1.35;
-    text-wrap: balance;
-  }
-  @media (min-width: 1024px) {
-    .hero-meta-b { display: block; grid-column: 5 / span 3; }
-  }
-  .hero-meta-c {
-    padding: 8px;
-    color: var(--label-2);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    line-height: 1.35;
-    grid-column: span 12;
-  }
-  @media (min-width: 1024px) {
-    .hero-meta-c { grid-column: 9 / span 4; }
-  }
-  .hero-meta-c a { color: var(--label-1); text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 0.08em; transition: text-decoration-color 150ms var(--ease-out); }
-  @media (hover: hover) { .hero-meta-c a:hover { text-decoration-color: var(--label-1); } }
-
+  @media (min-width: 1024px) { .hero-meta { display: grid; grid-template-columns: repeat(12,1fr); gap: 8px; } }
+  .hero-meta-a { display: none; padding: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: clamp(24px,3svw,30px); line-height: 1.15; letter-spacing: -0.02em; }
+  @media (min-width: 1024px) { .hero-meta-a { display: block; grid-column: 1 / span 3; } }
+  .hero-meta-b { display: none; padding: 8px; color: var(--label-2); font-family: 'JetBrains Mono', monospace; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.35; text-wrap: balance; }
+  @media (min-width: 1024px) { .hero-meta-b { display: block; grid-column: 5 / span 3; } }
+  .hero-meta-c { padding: 8px; color: var(--label-2); font-family: 'JetBrains Mono', monospace; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.35; grid-column: span 12; }
+  @media (min-width: 1024px) { .hero-meta-c { grid-column: 9 / span 4; } }
   .hero-headline {
-    grid-column: span 12;
-    padding: 8px;
-    font-family: 'Roboto Flex', 'Space Grotesk', sans-serif;
-    font-weight: 700;
+    grid-column: span 12; padding: 8px;
+    font-family: 'Roboto Flex', 'Space Grotesk', sans-serif; font-weight: 700;
     font-variation-settings: "wdth" 120, "wght" 700;
-    font-size: clamp(48px, 7.2svw, 96px);
-    line-height: 0.98;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-    display: flex; flex-direction: column;
-    color: var(--label-1);
+    font-size: clamp(48px,7.2svw,96px); line-height: 0.98; letter-spacing: -0.02em;
+    text-transform: uppercase; display: flex; flex-direction: column; color: var(--label-1);
   }
-  @media (min-width: 1024px) {
-    .hero-headline { font-size: clamp(72px, 6svw, 128px); }
-  }
+  @media (min-width: 1024px) { .hero-headline { font-size: clamp(72px,6svw,128px); } }
 
-  /* redact bar */
   .redact {
-    display: inline-flex; align-items: baseline; gap: 0.12em;
-    margin: 0 0.06em;
-    vertical-align: baseline;
-    user-select: text;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72em;
+    display: inline-flex; align-items: baseline; gap: 0.12em; margin: 0 0.06em;
+    vertical-align: baseline; user-select: text; font-family: 'JetBrains Mono', monospace; font-size: 0.72em;
   }
-  .redact span {
-    display: inline-block; min-width: 0.62em; text-align: center;
-    color: var(--label-1); font-variant-numeric: tabular-nums;
-  }
+  .redact span { display: inline-block; min-width: 0.62em; text-align: center; color: var(--label-1); font-variant-numeric: tabular-nums; }
 
-  /* ═══════════════════════════════════════════════ THESIS ═══════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════ PROJECT META TABLE ═══════════════════════════════════════════════ */
+  .meta-table { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 0; border-top: 1px solid var(--line); }
+  .meta-row {
+    grid-column: span 12; display: grid; grid-template-columns: 1fr; gap: 4px;
+    padding: 16px 8px; border-bottom: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  @media (min-width: 768px) { .meta-row { grid-template-columns: 200px 1fr; gap: 24px; } }
+  .meta-row .k { color: var(--label-3); }
+  .meta-row .v { color: var(--label-1); }
 
-  .thesis {
-    padding: 96px 0 128px;
-  }
-  @media (min-width: 1024px) { .thesis { padding: 128px 0 160px; } }
-  .thesis-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 24px;
-  }
-  .thesis-signature {
-    display: none;
-    grid-column: span 3;
-  }
-  @media (min-width: 1024px) { .thesis-signature { display: block; } }
-  .thesis-body {
-    grid-column: span 12;
-    display: flex; flex-direction: column; gap: 24px;
-    padding: 8px;
-  }
-  @media (min-width: 1024px) { .thesis-body { grid-column: 5 / span 8; } }
-  .thesis-body p {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(20px, 3.2svw, 32px);
-    line-height: 1.3;
-    letter-spacing: -0.015em;
-    color: var(--label-1);
-  }
-  .thesis-body p.dim { color: var(--label-2); }
-  .thesis-body a {
-    color: var(--label-1);
-    text-decoration: underline;
-    text-decoration-color: var(--label-3);
-    text-underline-offset: 0.08em;
-    transition: text-decoration-color 150ms var(--ease-out);
-  }
-  @media (hover: hover) { .thesis-body a:hover { text-decoration-color: var(--label-1); } }
+  /* ═══════════════════════════════════════════════ SECTION SCAFFOLD ═══════════════════════════════════════════════ */
+  .section { padding: 96px 0; }
+  @media (min-width: 1024px) { .section { padding: 128px 0; } }
+  .section-head { display: grid; grid-template-columns: repeat(12,1fr); gap: 24px; margin-bottom: 56px; }
+  .section-head .eyebrow { grid-column: span 12; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label-2); }
+  @media (min-width: 1024px) { .section-head .eyebrow { grid-column: 1 / span 3; } }
+  .section-head .title { grid-column: span 12; padding: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: clamp(32px,5.4svw,64px); line-height: 1; letter-spacing: -0.03em; color: var(--label-1); }
+  @media (min-width: 1024px) { .section-head .title { grid-column: 5 / span 8; } }
+  .section-head .lead { grid-column: span 12; padding: 8px; margin-top: 4px; font-size: clamp(16px,1.2vw,19px); line-height: 1.55; color: var(--label-2); max-width: 640px; }
+  @media (min-width: 1024px) { .section-head .lead { grid-column: 5 / span 7; } }
 
-  /* Hand-drawn signature SVG (echoes haoqi's yellow-green squiggle) */
-  .svg-sign {
-    position: absolute;
-    top: -4%;
-    left: -8%;
-    width: 75%;
-    pointer-events: none;
-    z-index: 1;
+  /* Figure block */
+  .figure { padding: 8px; }
+  .figure-frame { width: 100%; background: var(--bg-elevated); position: relative; overflow: hidden; border: 1px solid var(--line); }
+  .figure-frame svg { display: block; width: 100%; height: 100%; }
+  .figure-tag {
+    position: absolute; top: 0; right: 0; z-index: 10; background: var(--selection); color: #0A0A0A;
+    padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
   }
-  .thesis-signature { position: relative; }
-  .svg-sign__path {
-    opacity: 0; fill: none; stroke-linecap: butt; stroke: var(--selection); stroke-width: 4;
+  .figure-cap { margin-top: 12px; display: flex; justify-content: space-between; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--label-2); }
+  .figure-cap .name { color: var(--label-1); }
+  .figure-cap a { color: var(--label-1); }
+  .figure-cap .ext { display: inline-flex; gap: 4px; }
+
+  /* two-col text under a chapter */
+  .prose { display: grid; grid-template-columns: repeat(12,1fr); gap: 24px; }
+  .prose .body { grid-column: span 12; padding: 8px; }
+  @media (min-width: 1024px) { .prose .body { grid-column: 5 / span 7; } }
+  .prose .aside { grid-column: span 12; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.8; color: var(--label-2); text-transform: uppercase; letter-spacing: 0.03em; }
+  @media (min-width: 1024px) { .prose .aside { grid-column: 1 / span 3; } }
+  .prose p { font-size: clamp(16px,1.15vw,19px); line-height: 1.6; color: var(--label-1); margin-bottom: 18px; }
+  .prose p.dim { color: var(--label-2); }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose code { font-family: 'JetBrains Mono', monospace; font-size: 0.86em; background: var(--bg-elevated); padding: 1px 6px; border-radius: 3px; color: var(--label-1); }
+  .aside .k { color: var(--label-3); display: block; margin-top: 14px; }
+  .aside .k:first-child { margin-top: 0; }
+  .aside .v { color: var(--label-1); display: block; }
+
+  /* ═══════════════════════════════════════════════ CHAPTER GRID (asymmetric figures) ═══════════════════════════════════════════════ */
+  .chapter { padding: 64px 0; }
+  .chapter-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 24px; align-items: start; }
+  .chapter-num { grid-column: span 12; padding: 8px; font-family: 'Instrument Serif', serif; font-style: italic; color: var(--accent); font-size: 48px; line-height: 1; }
+  @media (min-width: 1024px) { .chapter-num { grid-column: 1 / span 3; position: sticky; top: 120px; } }
+  .chapter-main { grid-column: span 12; }
+  @media (min-width: 1024px) { .chapter-main { grid-column: 5 / span 8; } }
+  .chapter-main h3 { padding: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: clamp(26px,3.4svw,40px); line-height: 1.05; letter-spacing: -0.025em; color: var(--label-1); margin-bottom: 12px; }
+  .chapter-main h3 em { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--accent); font-weight: 400; }
+  .chapter-main p { padding: 8px; font-size: clamp(16px,1.1vw,18px); line-height: 1.6; color: var(--label-2); margin-bottom: 24px; max-width: 620px; }
+  .capability-list { padding: 8px; display: flex; flex-direction: column; }
+  .capability {
+    display: grid; grid-template-columns: 28px 1fr auto; gap: 16px; align-items: baseline;
+    padding: 16px 0; border-top: 1px solid var(--line);
+    font-size: 15px;
   }
-  .svg-sign.is-drawing .svg-sign__path {
-    animation:
-      svg-sign-show 0s linear var(--path-delay, 0s) forwards,
-      svg-sign-draw var(--path-dur, 1s) cubic-bezier(0.65, 0, 0.35, 1) var(--path-delay, 0s) forwards;
+  .capability:last-child { border-bottom: 1px solid var(--line); }
+  .capability .idx { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); }
+  .capability .lbl { color: var(--label-1); }
+  .capability .lbl small { display: block; color: var(--label-2); font-size: 13px; margin-top: 3px; line-height: 1.45; }
+  .capability .st { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--label-2); white-space: nowrap; }
+
+  /* platform matrix chips */
+  .chips { padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--label-2);
   }
+  .chip.on { color: var(--label-1); border-color: var(--label-3); }
+
+  /* ═══════════════════════════════════════════════ NOTES / PRINCIPLES ═══════════════════════════════════════════════ */
+  .principles { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 24px; }
+  .principle { grid-column: span 12; display: flex; gap: 16px; padding: 8px; }
+  @media (min-width: 1024px) { .principle { grid-column: span 6; } }
+  .principle .num { flex-shrink: 0; min-width: 40px; font-family: 'Instrument Serif', serif; font-style: italic; color: var(--accent); font-size: 36px; line-height: 1; }
+  .principle h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 22px; line-height: 1.2; letter-spacing: -0.015em; color: var(--label-1); margin-bottom: 10px; }
+  .principle p { font-size: 15px; line-height: 1.55; color: var(--label-2); }
+
+  /* Hand-drawn signature */
+  .sign-wrap { position: relative; }
+  .svg-sign { position: absolute; top: -4%; left: -8%; width: 75%; pointer-events: none; z-index: 1; }
+  .svg-sign__path { opacity: 0; fill: none; stroke-linecap: butt; stroke: var(--selection); stroke-width: 4; }
+  .svg-sign.is-drawing .svg-sign__path { animation: svg-sign-show 0s linear var(--path-delay,0s) forwards, svg-sign-draw var(--path-dur,1s) cubic-bezier(0.65,0,0.35,1) var(--path-delay,0s) forwards; }
   @keyframes svg-sign-draw { to { stroke-dashoffset: 0; } }
   @keyframes svg-sign-show { to { opacity: 1; } }
 
-  /* ═══════════════════════════════════════════════ NOTES / PRINCIPLES ═══════════════════════════════════════════════ */
-
-  .section-head { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; margin-bottom: 64px; }
-  .section-head .eyebrow {
-    grid-column: span 12;
-    padding: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--label-2);
-  }
-  @media (min-width: 1024px) { .section-head .eyebrow { grid-column: 1 / span 3; } }
-  .section-head .title {
-    grid-column: span 12;
-    padding: 8px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
-    font-size: clamp(32px, 5.4svw, 64px);
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: var(--label-1);
-  }
-  @media (min-width: 1024px) { .section-head .title { grid-column: 5 / span 8; } }
-  .section-head em {
-    font-family: 'Instrument Serif', serif;
-    font-style: italic;
-    font-weight: 400;
-    color: var(--accent);
-  }
-
-  .principles {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 24px 24px;
-  }
-  .principle {
-    grid-column: span 12;
-    display: flex; gap: 16px;
-    padding: 8px;
-  }
-  @media (min-width: 1024px) { .principle { grid-column: span 6; } }
-  .principle .num {
-    flex-shrink: 0;
-    min-width: 40px;
-    font-family: 'Instrument Serif', serif;
-    font-style: italic;
-    color: var(--accent);
-    font-size: 36px;
-    line-height: 1;
-  }
-  .principle h3 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
-    font-size: 22px;
-    line-height: 1.2;
-    letter-spacing: -0.015em;
-    color: var(--label-1);
-    margin-bottom: 10px;
-  }
-  .principle p {
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--label-2);
-  }
-
-  /* ═══════════════════════════════════════════════ WORK GRID (haoqi-style asymmetric) ═══════════════════════════════════════════════ */
-
-  .works-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    row-gap: 96px;
-    column-gap: 24px;
-  }
-  @media (min-width: 1024px) { .works-grid { row-gap: 128px; } }
-
-  .work-item { padding: 8px; }
-  .work-item.w1 { grid-column: span 12; }
-  @media (min-width: 1024px) {
-    .work-item.w1 { grid-column: 5 / span 8; }
-    .work-item.w2 { grid-column: 1 / span 5; }
-    .work-item.w3 { grid-column: 7 / span 5; }
-    .work-item.w4 { grid-column: 5 / span 4; }
-  }
-  @media (min-width: 1280px) {
-    .work-item.w4 { grid-column: 6 / span 3; }
-  }
-
-  .work-link {
-    display: block;
-    position: relative;
-  }
-  .work-thumb {
-    width: 100%;
-    background: var(--bg-elevated);
-    position: relative;
-    overflow: hidden;
-    transition: filter 400ms var(--cubic-66);
-  }
-  .work-thumb.w1 { aspect-ratio: 1332 / 750; }
-  .work-thumb.w2 { aspect-ratio: 3840 / 2160; }
-  .work-thumb.w3 { aspect-ratio: 3840 / 2160; }
-  .work-thumb.w4 { aspect-ratio: 1440 / 936; }
-  .work-thumb svg { display: block; width: 100%; height: 100%; }
-  .work-tag {
-    position: absolute; top: 0; right: 0; z-index: 10;
-    background: var(--selection);
-    color: #0A0A0A;
-    padding: 2px 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    pointer-events: none;
-    user-select: none;
-  }
-  .work-meta {
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  @media (min-width: 1024px) { .work-meta { font-size: 14px; } }
-  .work-meta .title {
-    flex: 1; min-width: 0;
-    color: var(--label-1);
-  }
-  .work-meta .right {
-    display: flex; align-items: center; gap: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--label-2);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  .work-meta .right .kind {
-    display: none;
-  }
-  @media (min-width: 1024px) { .work-meta .right .kind { display: inline-flex; align-items: center; gap: 4px; } }
-  .work-desc {
-    margin-top: 8px;
-    padding: 0 8px 0 0;
-    color: var(--label-2);
-    font-size: 14px;
-    line-height: 1.5;
-    max-width: 560px;
-  }
-
-  /* ═══════════════════════════════════════════════ INNOVATE-STYLE STICKY PIN ═══════════════════════════════════════════════ */
-
-  .pin-outer {
-    position: relative;
-    height: 3200px;
-  }
-  .pin-sticky {
-    position: sticky; top: 0;
-    height: 100vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 96px 16px;
-  }
+  /* ═══════════════════════════════════════════════ STICKY PIN ═══════════════════════════════════════════════ */
+  .pin-outer { position: relative; height: 3200px; }
+  .pin-sticky { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 96px 16px; }
   .pin-word {
-    font-family: 'Roboto Flex', 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-variation-settings: "wdth" 120, "wght" 700;
-    font-size: clamp(48px, 8svw, 132px);
-    line-height: 0.98;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-    color: var(--label-1);
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 800ms var(--cubic-66), transform 800ms var(--cubic-66);
-    text-align: center;
+    font-family: 'Roboto Flex', 'Space Grotesk', sans-serif; font-weight: 700; font-variation-settings: "wdth" 120, "wght" 700;
+    font-size: clamp(48px,8svw,132px); line-height: 0.98; letter-spacing: -0.02em; text-transform: uppercase; color: var(--label-1);
+    opacity: 0; transform: translateY(20px); transition: opacity 800ms var(--cubic-66), transform 800ms var(--cubic-66); text-align: center;
   }
   .pin-word.in { opacity: 1; transform: translateY(0); }
-  .pin-word.italic {
-    font-family: 'Instrument Serif', serif;
-    font-style: italic;
-    font-weight: 400;
-    font-variation-settings: normal;
-    color: var(--accent);
-    letter-spacing: -0.03em;
-  }
+  .pin-word.italic { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; font-variation-settings: normal; color: var(--accent); letter-spacing: -0.03em; }
 
   /* ═══════════════════════════════════════════════ CONTACT / FOOTER ═══════════════════════════════════════════════ */
-
-  .contact {
-    padding: 128px 0 128px;
-    display: flex; flex-direction: column; justify-content: center;
-    min-height: calc(100vh - 190px);
-  }
+  .contact { padding: 128px 0; display: flex; flex-direction: column; justify-content: center; min-height: calc(100vh - 200px); }
   .contact-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 8px;
-    font-family: 'Roboto Flex', 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-variation-settings: "wdth" 120, "wght" 700;
-    font-size: clamp(48px, 7.2svw, 96px);
-    line-height: 0.98;
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
+    display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 8px;
+    font-family: 'Roboto Flex', 'Space Grotesk', sans-serif; font-weight: 700; font-variation-settings: "wdth" 120, "wght" 700;
+    font-size: clamp(48px,7.2svw,96px); line-height: 0.98; text-transform: uppercase; letter-spacing: -0.02em;
   }
-  @media (min-width: 1024px) { .contact-grid { font-size: clamp(72px, 5.6svw, 120px); } }
+  @media (min-width: 1024px) { .contact-grid { font-size: clamp(72px,5.6svw,120px); } }
   .contact-grid .c1 { grid-column: 1 / span 6; }
   .contact-grid .c2 { grid-column: 7 / span 6; text-align: right; }
   .contact-grid .c3 { grid-column: 1 / span 12; }
@@ -559,62 +299,30 @@
     .contact-grid .c3 { grid-column: 2 / span 10; }
     .contact-grid .c4 { grid-column: 3 / span 9; }
   }
-  .contact-links {
-    margin-top: 96px;
-    padding: 8px;
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .contact-links a {
-    position: relative;
-    padding: 8px;
-    color: var(--label-1);
-  }
-  .contact-links a::before {
-    content: '';
-    position: absolute; inset: 0;
-    border: 2px dotted transparent;
-    transition: border-color 200ms var(--ease-out);
-    pointer-events: none;
-  }
-  @media (hover: hover) {
-    .contact-links a:hover::before { border-color: var(--label-1); }
-  }
+  .contact-links { margin-top: 96px; padding: 8px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .contact-links a { position: relative; padding: 8px; color: var(--label-1); }
+  .contact-links a::before { content: ''; position: absolute; inset: 0; border: 2px dotted transparent; transition: border-color 200ms var(--ease-out); pointer-events: none; }
+  @media (hover: hover) { .contact-links a:hover::before { border-color: var(--label-1); } }
   .contact-links .right { display: flex; gap: 8px; }
 
-  .footer {
-    padding: 24px 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--label-3);
-    display: flex; justify-content: space-between;
-  }
+  .footer { padding: 24px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--label-3); display: flex; justify-content: space-between; }
   @media (min-width: 1024px) { .footer { padding: 24px 56px; } }
 
   /* ═══════════════════════════════════════════════ REVEAL ═══════════════════════════════════════════════ */
-
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity 900ms var(--cubic-66), transform 900ms var(--cubic-66); }
   .reveal.in { opacity: 1; transform: none; }
-
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(24px); filter: blur(3px); }
-    to { opacity: 1; transform: translateY(0); filter: none; }
-  }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); filter: blur(3px); } to { opacity: 1; transform: translateY(0); filter: none; } }
   .rise { animation: rise 900ms var(--cubic-66) both; }
-  .rise-1 { animation-delay: .05s; }
-  .rise-2 { animation-delay: .16s; }
-  .rise-3 { animation-delay: .30s; }
-  .rise-4 { animation-delay: .44s; }
+  .rise-1 { animation-delay: .05s; } .rise-2 { animation-delay: .16s; } .rise-3 { animation-delay: .30s; } .rise-4 { animation-delay: .44s; }
+  @media (prefers-reduced-motion: reduce) { .reveal, .rise, .pin-word { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; } }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════ BLUEPRINT GRID OVERLAY ════════════════════════════════════════════════ -->
+<!-- Halftone dot-matrix background -->
+<canvas id="dots" aria-hidden="true"></canvas>
+
+<!-- Blueprint grid overlay -->
 <div class="grid-overlay" aria-hidden="true">
   <svg viewBox="0 0 1440 900" preserveAspectRatio="none">
     <path d="M56.5 0V288M499.5 0V288M941.5 0V288M1384.5 0V288M56.5 312V600M499.5 312V600M941.5 312V600M1384.5 312V600M56.5 624V900M499.5 624V900M941.5 624V900M1384.5 624V900" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/>
@@ -623,13 +331,14 @@
   </svg>
 </div>
 
-<!-- ════════════════════════════════════════════════ HUD FRAME ════════════════════════════════════════════════ -->
+<!-- HUD FRAME -->
 <div class="hud" aria-label="Site chrome">
   <div class="hud-row">
-    <a href="/" class="hud-btn hud-brand">QUAN YIN<span style="opacity:.7">.DESIGN</span></a>
+    <a href="#top" class="hud-btn hud-brand" data-scroll>QUAN YIN<span style="opacity:.7">.DESIGN</span></a>
     <div class="hud-group">
-      <a href="#work" class="hud-btn">Work</a>
-      <a href="#contact" class="hud-btn">Contact</a>
+      <a href="#project" class="hud-btn" data-scroll>Project</a>
+      <a href="#notes" class="hud-btn hud-hide-sm" data-scroll>Notes</a>
+      <a href="#contact" class="hud-btn" data-scroll>Contact</a>
       <button class="hud-btn" id="theme-toggle" aria-label="Toggle theme">Theme[<span id="theme-letter">A</span>]</button>
     </div>
   </div>
@@ -639,18 +348,9 @@
       <svg width="48" height="24" viewBox="0 0 48 24" fill="none" aria-hidden="true">
         <ellipse stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" cx="24" cy="12" rx="22" ry="11"/>
         <path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M2 12H46"/>
-        <g transform="translate(24 12)"><g>
-          <animateTransform attributeName="transform" type="scale" dur="2600ms" repeatCount="indefinite" values="1 1;-1 1" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" begin="0ms"/>
-          <path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M24 23C11.8497 23 2 18.0751 2 12C2 5.92487 11.8497 1 24 1" transform="translate(-24 -12)"/>
-        </g></g>
-        <g transform="translate(24 12)"><g>
-          <animateTransform attributeName="transform" type="scale" dur="2600ms" repeatCount="indefinite" values="1 1;-1 1" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" begin="-433ms"/>
-          <path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M24 23C11.8497 23 2 18.0751 2 12C2 5.92487 11.8497 1 24 1" transform="translate(-24 -12)"/>
-        </g></g>
-        <g transform="translate(24 12)"><g>
-          <animateTransform attributeName="transform" type="scale" dur="2600ms" repeatCount="indefinite" values="1 1;-1 1" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" begin="-867ms"/>
-          <path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M24 23C11.8497 23 2 18.0751 2 12C2 5.92487 11.8497 1 24 1" transform="translate(-24 -12)"/>
-        </g></g>
+        <g transform="translate(24 12)"><g><animateTransform attributeName="transform" type="scale" dur="2600ms" repeatCount="indefinite" values="1 1;-1 1" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" begin="0ms"/><path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M24 23C11.8497 23 2 18.0751 2 12C2 5.92487 11.8497 1 24 1" transform="translate(-24 -12)"/></g></g>
+        <g transform="translate(24 12)"><g><animateTransform attributeName="transform" type="scale" dur="2600ms" repeatCount="indefinite" values="1 1;-1 1" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" begin="-867ms"/><path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M24 23C11.8497 23 2 18.0751 2 12C2 5.92487 11.8497 1 24 1" transform="translate(-24 -12)"/></g></g>
+        <g transform="translate(24 12)"><g><animateTransform attributeName="transform" type="scale" dur="2600ms" repeatCount="indefinite" values="1 1;-1 1" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" begin="-1733ms"/><path stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" d="M24 23C11.8497 23 2 18.0751 2 12C2 5.92487 11.8497 1 24 1" transform="translate(-24 -12)"/></g></g>
       </svg>
     </div>
   </div>
@@ -665,297 +365,222 @@
   </svg>
 </div>
 
-<main>
+<main id="top">
 
-  <!-- ════════════════════════════════════════════════ HERO ════════════════════════════════════════════════ -->
+  <!-- HERO -->
   <section class="hero">
     <div class="container-outer" style="width:100%;">
       <div class="hero-grid">
         <div class="hero-meta">
-          <div class="hero-meta-a rise rise-1">
-            Design &amp;<br/>Engineering
-          </div>
-          <div class="hero-meta-b rise rise-2">
-            Thinking in systems. Designing the seam.
-          </div>
+          <div class="hero-meta-a rise rise-1">Design &amp;<br/>Engineering</div>
+          <div class="hero-meta-b rise rise-2">Thinking in systems. Designing the seam.</div>
           <div class="hero-meta-c rise rise-3">
-            I'm Quan Yin, leading design engineering and AI-native tooling at <span class="redact" aria-label="Employer name — redacted"><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span></span>. I own Theme Store and the Water Figma Plugin — the seam layer of our design system.
+            I'm Quan Yin — a design engineer at <span class="redact" aria-label="employer redacted"><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span></span>. This page is one project: <span style="color:var(--label-1)">Water</span> — the design system I build, and the tooling that makes it disappear into the workflow.
           </div>
         </div>
         <h1 class="hero-headline rise rise-4">
-          <span>I bring</span>
-          <span>craft &amp; taste</span>
-          <span>to design systems</span>
+          <span>A design</span>
+          <span>system, &amp; the</span>
+          <span>tools beneath.</span>
         </h1>
       </div>
     </div>
   </section>
 
-  <!-- ════════════════════════════════════════════════ THESIS ════════════════════════════════════════════════ -->
-  <section class="thesis">
+  <!-- § PROJECT OVERVIEW -->
+  <section class="section" id="project">
     <div class="container-outer">
-      <div class="thesis-grid">
-        <div class="thesis-signature reveal">
-          <svg viewBox="0 0 320 154" fill="none" class="svg-sign" aria-hidden="true">
-            <path class="svg-sign__path" d="M138.27 11.7729C123.15 39.3885 106.223 85.497 102.06 100.029C98.6588 111.899 98.3721 128.792 98.6271 131.165" style="--path-len:126.95; --path-dur:.18s; --path-delay:.5s; stroke-dasharray:126.95; stroke-dashoffset:126.95;"/>
-            <path class="svg-sign__path" d="M78.2326 42.073C68.2519 91.6846 24.5171 161.888 11.6117 145.082C-3.90668 124.872 84.4229 80.042 149.127 70.3141C129.181 76.883 121.731 89.3385 127.224 93.3199C137.212 100.559 148.931 80.9071 154.826 68.4373C154.826 68.4373 145.919 84.0047 152.863 86.4553C163.666 90.2674 183.35 47.449 193.768 55.6123C200.863 61.1719 187.995 78.0438 180.889 75.6465C176.521 74.173 179.98 64.5401 184.583 59.6902C186.629 62.1747 192.878 65.6969 201.5 59.9093C210.123 54.1218 217.989 47.6358 220.844 45.1163" style="--path-len:539.87; --path-dur:.75s; --path-delay:.7s; stroke-dasharray:539.87; stroke-dashoffset:539.87;"/>
-            <path class="svg-sign__path" d="M235.554 43.4299C221.979 37.3731 206.4 60.4017 215.719 63.1233C224.115 65.5752 234.431 48.0119 239.203 40.1227C237.612 42.7522 234.822 53.6736 235.156 66.1976C235.574 81.8524 228.174 116.927 217.431 114.674C206.687 112.422 217.712 80.3645 242.778 57.3701C262.83 38.9746 269.549 28.9006 270.402 26.163C266.375 32.0516 260.249 44.2468 267.959 45.919C275.669 47.5912 298.148 19.8335 308.423 5.74565" style="--path-len:343.89; --path-dur:.48s; --path-delay:1.49s; stroke-dasharray:343.89; stroke-dashoffset:343.89;"/>
-            <path class="svg-sign__path" d="M274.89 10.4194L274.409 16.157" style="--path-len:5.76; --path-dur:.01s; --path-delay:1.99s; stroke-dasharray:5.76; stroke-dashoffset:5.76;stroke-width:5;"/>
-          </svg>
-          <div style="aspect-ratio: 1 / 1;"></div>
+      <div class="section-head reveal">
+        <div class="eyebrow">§ 00 — The project</div>
+        <h2 class="title"><em class="serif">Water</em> — a design system, at scale.</h2>
+        <p class="lead">One design language across every surface of the product — mobile, desktop, and the seven platforms in between — plus the theming pipeline and Figma-to-code tooling that keep it alive. I lead the design-engineering layer: where the system stops being a document and starts running through the build.</p>
+      </div>
+
+      <div class="meta-table reveal">
+        <div class="meta-row"><span class="k">Role</span><span class="v">Design Engineer — owner, Theme Store &amp; Figma Plugin</span></div>
+        <div class="meta-row"><span class="k">Team</span><span class="v">Design Systems — Water</span></div>
+        <div class="meta-row"><span class="k">Scope</span><span class="v">Tokens · theming pipeline · Figma ↔ code tooling · AI-native D2C</span></div>
+        <div class="meta-row"><span class="k">Platforms</span><span class="v">iOS · Android · Harmony · iPad · React Native · Flutter · H5</span></div>
+        <div class="meta-row"><span class="k">Timeline</span><span class="v">2023 — present</span></div>
+        <div class="meta-row"><span class="k">At</span><span class="v"><span class="redact"><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span></span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § CONTEXT -->
+  <section class="section" id="context" style="padding-top:0;">
+    <div class="container-outer">
+      <div class="prose reveal">
+        <div class="aside">
+          <span class="k">The problem</span>
+          <span class="v">Fragmented libraries</span>
+          <span class="k">The goal</span>
+          <span class="v">One order, many platforms</span>
         </div>
-        <div class="thesis-body reveal">
-          <p>I explore how AI-native workflows can quietly reshape a design system — from Figma variables becoming production code in one keystroke, to design specs that check themselves, to themes shipped like packages.</p>
-          <p class="dim">I'm building <a href="https://water.devops.xiaohongshu.com/themes" target="_blank" rel="noopener noreferrer">Theme Store</a> and the <a href="https://www.figma.com/community/plugin/1397510659438561031/water" target="_blank" rel="noopener noreferrer">Water Figma Plugin</a>, both inside <span style="color: var(--label-1);">Water</span> — the design system at <span class="redact"><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span></span>. The design system stops being a spec that people consult and starts being an ambient part of how the team ships.</p>
+        <div class="body">
+          <p>Before Water, the component libraries lived on scattered platforms — disconnected, unevenly adopted, and hard to actually use in production. Design principles existed, but had no reliable path onto the screen.</p>
+          <p class="dim">The work was to gather the scattered assets into one center of gravity: a system that spans B- and C-side products, that a designer can browse and an engineer can install, and that stays extensible as the business multiplies. Not a component library — an operating order for the product surface.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ════════════════════════════════════════════════ NOTES ════════════════════════════════════════════════ -->
-  <section class="notes container-outer" id="notes" style="padding-bottom:128px;">
-    <div class="section-head reveal">
-      <div class="eyebrow">§ 01 — Notes on the practice</div>
-      <h2 class="title">On design systems, in <em>a few</em> sentences.</h2>
+  <!-- CHAPTER 01 — THE SYSTEM -->
+  <section class="chapter container-outer" id="system">
+    <div class="chapter-grid">
+      <div class="chapter-num reveal">01</div>
+      <div class="chapter-main">
+        <div class="figure reveal">
+          <div class="figure-frame" style="aspect-ratio:1332/560;">
+            <span class="figure-tag">Design system</span>
+            <svg viewBox="0 0 1332 560" preserveAspectRatio="xMidYMid slice">
+              <defs><linearGradient id="wg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2D6CA8" stop-opacity="0.3"/><stop offset="1" stop-color="#2D6CA8" stop-opacity="0"/></linearGradient></defs>
+              <path d="M 0 300 Q 333 230 666 285 T 1332 250 L 1332 560 L 0 560 Z" fill="url(#wg1)"/>
+              <path d="M 0 360 Q 333 305 666 348 T 1332 325" fill="none" stroke="#2D6CA8" stroke-width="1.2" opacity="0.35"/>
+              <path d="M 0 430 Q 333 385 666 418 T 1332 400" fill="none" stroke="#2D6CA8" stroke-width="1.2" opacity="0.2"/>
+              <g font-family="JetBrains Mono" font-size="19" fill="currentColor" opacity="0.7">
+                <text x="80" y="96">tokens</text><text x="80" y="124">components</text><text x="80" y="152">motion</text><text x="80" y="180">themes</text><text x="80" y="208">docs</text>
+              </g>
+              <g transform="translate(940,72)" font-family="JetBrains Mono" font-size="16">
+                <rect x="0" y="0" width="300" height="200" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+                <rect x="0" y="0" width="300" height="40" fill="currentColor" opacity="0.1"/>
+                <circle cx="40" cy="96" r="11" fill="#DC5A2A"/><rect x="72" y="86" width="150" height="10" fill="currentColor" opacity="0.4"/><rect x="72" y="102" width="100" height="10" fill="currentColor" opacity="0.25"/>
+                <rect x="38" y="144" width="220" height="10" fill="currentColor" opacity="0.15"/><rect x="38" y="164" width="140" height="10" fill="currentColor" opacity="0.15"/>
+              </g>
+            </svg>
+          </div>
+          <div class="figure-cap"><span class="name">Water<em class="serif" style="font-size:.7em">™</em> — tokens, components, motion, themes, docs</span><a href="https://water.devops.xiaohongshu.com/" target="_blank" rel="noopener noreferrer" class="ext">visit ↗</a></div>
+        </div>
+        <h3>One system, <em>two</em> libraries.</h3>
+        <p>Water carries a single language across two component libraries — <strong style="color:var(--label-1);font-weight:500">ReDS</strong> for mobile and <strong style="color:var(--label-1);font-weight:500">DDS</strong> for desktop — sharing tokens, motion, and tone underneath. A product picks its library and theme, and starts designing inside the same order everyone else works in.</p>
+        <div class="chips">
+          <span class="chip on">ReDS · mobile</span>
+          <span class="chip on">DDS · desktop</span>
+          <span class="chip">iOS</span><span class="chip">Android</span><span class="chip">Harmony</span><span class="chip">iPad</span><span class="chip">RN</span><span class="chip">Flutter</span><span class="chip">H5</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAPTER 02 — THEME STORE -->
+  <section class="chapter container-outer" id="theme-store">
+    <div class="chapter-grid">
+      <div class="chapter-num reveal">02</div>
+      <div class="chapter-main">
+        <div class="figure reveal">
+          <div class="figure-frame" style="aspect-ratio:1332/750;">
+            <span class="figure-tag">Theme management</span>
+            <svg viewBox="0 0 1332 750" preserveAspectRatio="xMidYMid slice">
+              <g transform="translate(120,140)"><rect width="300" height="440" rx="14" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/><rect width="300" height="210" fill="#DC5A2A"/><circle cx="62" cy="62" r="17" fill="var(--bg-elevated)" opacity="0.9"/><rect x="26" y="248" width="180" height="18" fill="currentColor" opacity="0.7"/><rect x="26" y="282" width="116" height="13" fill="currentColor" opacity="0.35"/><text x="26" y="380" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.6">brand.candy</text></g>
+              <g transform="translate(516,190)"><rect width="300" height="440" rx="14" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/><rect width="300" height="210" fill="#1A4A6E"/><circle cx="62" cy="62" r="17" fill="var(--bg-elevated)" opacity="0.9"/><rect x="26" y="248" width="180" height="18" fill="currentColor" opacity="0.7"/><rect x="26" y="282" width="116" height="13" fill="currentColor" opacity="0.35"/><text x="26" y="380" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.6">deep.night</text></g>
+              <g transform="translate(912,140)"><rect width="300" height="440" rx="14" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/><rect width="300" height="210" fill="#3B6F3B"/><circle cx="62" cy="62" r="17" fill="var(--bg-elevated)" opacity="0.9"/><rect x="26" y="248" width="180" height="18" fill="currentColor" opacity="0.7"/><rect x="26" y="282" width="116" height="13" fill="currentColor" opacity="0.35"/><text x="26" y="380" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.6">forest.7</text></g>
+              <text x="666" y="690" font-family="JetBrains Mono" font-size="21" fill="currentColor" opacity="0.5" text-anchor="middle">figma variables → npm package · ~1 minute</text>
+            </svg>
+          </div>
+          <div class="figure-cap"><span class="name">Theme Store — owned end to end</span><a href="https://water.devops.xiaohongshu.com/themes" target="_blank" rel="noopener noreferrer" class="ext">visit ↗</a></div>
+        </div>
+        <h3>Themes shipped like <em>packages</em>.</h3>
+        <p>Theme Store is the surface I own end to end — a platform that turns a color exploration into shippable code. A designer builds a theme from Figma variables; Theme Store loads the file, previews the token list, and publishes a versioned pack. About a minute later, an engineer installs it.</p>
+        <div class="capability-list">
+          <div class="capability"><span class="idx">01</span><span class="lbl">Design in Figma variables<small>Duplicate the token file, edit modes, rebind or customize — no handoff doc.</small></span><span class="st">SOP</span></div>
+          <div class="capability"><span class="idx">02</span><span class="lbl">Load &amp; publish a theme pack<small>Paste the Figma link, preview tokens, configure, publish — notified on success.</small></span><span class="st">~1 min</span></div>
+          <div class="capability"><span class="idx">03</span><span class="lbl">Install across platforms<small><code>npm i @xhs/water-&lt;theme&gt;</code> — index.css, theme.css namespaces, or stylus vars.</small></span><span class="st">5 stacks</span></div>
+        </div>
+        <div class="chips" style="margin-top:8px;">
+          <span class="chip on">H5</span><span class="chip on">RN</span><span class="chip on">iOS</span><span class="chip on">Android</span><span class="chip on">Flutter</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAPTER 03 — FIGMA PLUGIN -->
+  <section class="chapter container-outer" id="plugin">
+    <div class="chapter-grid">
+      <div class="chapter-num reveal">03</div>
+      <div class="chapter-main">
+        <div class="figure reveal">
+          <div class="figure-frame" style="aspect-ratio:1332/750;">
+            <span class="figure-tag">Figma plugin</span>
+            <svg viewBox="0 0 1332 750" preserveAspectRatio="xMidYMid slice">
+              <rect x="110" y="70" width="1112" height="610" rx="20" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/>
+              <rect x="110" y="70" width="1112" height="60" fill="currentColor" opacity="0.06"/>
+              <circle cx="158" cy="100" r="9" fill="#DC5A2A"/><circle cx="186" cy="100" r="9" fill="currentColor" opacity="0.25"/><circle cx="214" cy="100" r="9" fill="currentColor" opacity="0.25"/>
+              <text x="250" y="107" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.7">Water · 一个充满魔法的小小工具箱</text>
+              <g transform="translate(170,190)" font-family="JetBrains Mono" font-size="22" fill="currentColor">
+                <rect x="0" y="0" width="40" height="40" rx="7" fill="#DC5A2A"/><text x="62" y="30" opacity="0.85">Spec check</text><text x="760" y="30" opacity="0.4">▸ scan</text>
+                <rect x="0" y="78" width="40" height="40" rx="7" fill="#1A4A6E"/><text x="62" y="108" opacity="0.85">Token detection</text><text x="760" y="108" opacity="0.4">▸ 12 issues</text>
+                <rect x="0" y="156" width="40" height="40" rx="7" fill="#3B6F3B"/><text x="62" y="186" opacity="0.85">Variable source switch</text><text x="760" y="186" opacity="0.4">▸ 1 mode</text>
+                <rect x="0" y="234" width="40" height="40" rx="7" fill="#B58A2C"/><text x="62" y="264" opacity="0.85">Accessibility voiceover</text><text x="760" y="264" opacity="0.4">▸ WIP</text>
+                <rect x="0" y="312" width="40" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 6"/><text x="62" y="342" opacity="0.5">Multi-language · wip</text>
+                <text x="0" y="424" opacity="0.4" font-size="17">↳ dev mode: Delight D2C → code</text>
+              </g>
+            </svg>
+          </div>
+          <div class="figure-cap"><span class="name">Water · Figma Plugin — public on Figma Community</span><a href="https://www.figma.com/community/plugin/1397510659438561031/water" target="_blank" rel="noopener noreferrer" class="ext">visit ↗</a></div>
+        </div>
+        <h3>The seam, in <em>one</em> keystroke.</h3>
+        <p>"A small magical toolbox for Figma." The plugin keeps design and code mutually legible — it checks a file against the system, heals token drift, swaps variable sources for theming, records accessibility captions, and in dev-mode turns a component instance into Delight code the engineer can paste into VSCode. It's the layer that feeds AI-assisted D2C clean, spec-conformant input.</p>
+        <div class="capability-list">
+          <div class="capability"><span class="idx">01</span><span class="lbl">Spec check<small>Flags component, layout, text, asset and naming issues to lift D2C quality.</small></span><span class="st">design</span></div>
+          <div class="capability"><span class="idx">02</span><span class="lbl">Token detection<small>Finds stale, unbound and missing tokens; batch-merges to the right one.</small></span><span class="st">design</span></div>
+          <div class="capability"><span class="idx">03</span><span class="lbl">Variable source switch<small>Batch-rebind from public library to a customized brand theme.</small></span><span class="st">design</span></div>
+          <div class="capability"><span class="idx">04</span><span class="lbl">Accessibility voiceover<small>Store VoiceOver label / value / trait / hint as AI-consumable context.</small></span><span class="st">design</span></div>
+          <div class="capability"><span class="idx">05</span><span class="lbl">Delight D2C<small>Component instance → Delight-conformant code, into VSCode.</small></span><span class="st">dev</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAPTER 04 — ECOSYSTEM -->
+  <section class="chapter container-outer" id="ecosystem">
+    <div class="chapter-grid">
+      <div class="chapter-num reveal">04</div>
+      <div class="chapter-main">
+        <div class="figure reveal">
+          <div class="figure-frame" style="aspect-ratio:1332/750;">
+            <span class="figure-tag">Ecosystem</span>
+            <svg viewBox="0 0 1332 750" preserveAspectRatio="xMidYMid slice">
+              <g transform="translate(666,375)"><circle r="100" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/><text y="10" text-anchor="middle" font-family="Space Grotesk" font-size="48" fill="currentColor" font-weight="500">Water</text><text y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="18" fill="currentColor" opacity="0.55">design system</text></g>
+              <g font-family="JetBrains Mono" fill="currentColor">
+                <g transform="translate(250,180)"><circle r="66" fill="none" stroke="#DC5A2A" stroke-width="1.5" opacity="0.6"/><text y="2" text-anchor="middle" font-family="Space Grotesk" font-size="30" font-weight="500">BRIDGE</text><text y="30" text-anchor="middle" font-size="15" opacity="0.6">visual assets</text></g>
+                <g transform="translate(1082,180)"><circle r="66" fill="none" stroke="#1A4A6E" stroke-width="1.5" opacity="0.6"/><text y="2" text-anchor="middle" font-family="Space Grotesk" font-size="30" font-weight="500">PART</text><text y="30" text-anchor="middle" font-size="15" opacity="0.6">business</text></g>
+                <g transform="translate(250,570)"><circle r="66" fill="none" stroke="#3B6F3B" stroke-width="1.5" opacity="0.6"/><text y="2" text-anchor="middle" font-family="Space Grotesk" font-size="30" font-weight="500">OCEAN</text><text y="30" text-anchor="middle" font-size="15" opacity="0.6">i18n · copy</text></g>
+                <g transform="translate(1082,570)"><circle r="66" fill="none" stroke="#B58A2C" stroke-width="1.5" opacity="0.6"/><text y="2" text-anchor="middle" font-family="Space Grotesk" font-size="30" font-weight="500">DITTO</text><text y="30" text-anchor="middle" font-size="15" opacity="0.6">page builder</text></g>
+                <g transform="translate(666,110)"><circle r="58" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.45"/><text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="26" font-weight="500">ROBIN</text><text y="26" text-anchor="middle" font-size="15" opacity="0.55">NPS</text></g>
+              </g>
+              <g stroke="currentColor" stroke-width="1" opacity="0.28" fill="none"><line x1="666" y1="375" x2="250" y2="180"/><line x1="666" y1="375" x2="1082" y2="180"/><line x1="666" y1="375" x2="250" y2="570"/><line x1="666" y1="375" x2="1082" y2="570"/><line x1="666" y1="375" x2="666" y2="110"/></g>
+            </svg>
+          </div>
+          <div class="figure-cap"><span class="name">Five sibling platforms, one vocabulary</span><span>internal</span></div>
+        </div>
+        <h3>A system with <em>siblings</em>.</h3>
+        <p>Water doesn't stand alone. Around it sit five platforms that each speak the same vocabulary from a different corner of the product — <strong style="color:var(--label-1);font-weight:500">Bridge</strong> for visual assets, <strong style="color:var(--label-1);font-weight:500">Part</strong> for business components, <strong style="color:var(--label-1);font-weight:500">Ocean</strong> for multi-language and copy, <strong style="color:var(--label-1);font-weight:500">Ditto</strong> for page building, and <strong style="color:var(--label-1);font-weight:500">Robin</strong> for NPS. The design language becomes infrastructure the whole org builds on.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- § NOTES / PRINCIPLES -->
+  <section class="section container-outer" id="notes">
+    <div class="section-head sign-wrap reveal">
+      <div class="eyebrow" style="position:relative;">
+        <svg viewBox="0 0 320 154" fill="none" class="svg-sign" aria-hidden="true">
+          <path class="svg-sign__path" d="M138.27 11.7729C123.15 39.3885 106.223 85.497 102.06 100.029C98.6588 111.899 98.3721 128.792 98.6271 131.165" style="--path-len:126.95;--path-dur:.18s;--path-delay:.5s;stroke-dasharray:126.95;stroke-dashoffset:126.95;"/>
+          <path class="svg-sign__path" d="M78.2326 42.073C68.2519 91.6846 24.5171 161.888 11.6117 145.082C-3.90668 124.872 84.4229 80.042 149.127 70.3141C129.181 76.883 121.731 89.3385 127.224 93.3199C137.212 100.559 148.931 80.9071 154.826 68.4373C154.826 68.4373 145.919 84.0047 152.863 86.4553C163.666 90.2674 183.35 47.449 193.768 55.6123C200.863 61.1719 187.995 78.0438 180.889 75.6465C176.521 74.173 179.98 64.5401 184.583 59.6902C186.629 62.1747 192.878 65.6969 201.5 59.9093C210.123 54.1218 217.989 47.6358 220.844 45.1163" style="--path-len:539.87;--path-dur:.75s;--path-delay:.7s;stroke-dasharray:539.87;stroke-dashoffset:539.87;"/>
+          <path class="svg-sign__path" d="M235.554 43.4299C221.979 37.3731 206.4 60.4017 215.719 63.1233C224.115 65.5752 234.431 48.0119 239.203 40.1227C237.612 42.7522 234.822 53.6736 235.156 66.1976C235.574 81.8524 228.174 116.927 217.431 114.674C206.687 112.422 217.712 80.3645 242.778 57.3701C262.83 38.9746 269.549 28.9006 270.402 26.163C266.375 32.0516 260.249 44.2468 267.959 45.919C275.669 47.5912 298.148 19.8335 308.423 5.74565" style="--path-len:343.89;--path-dur:.48s;--path-delay:1.49s;stroke-dasharray:343.89;stroke-dashoffset:343.89;"/>
+        </svg>
+        § 05 — Notes on the practice
+      </div>
+      <h2 class="title">What I <em class="serif">believe</em> about design systems.</h2>
     </div>
     <div class="principles">
-      <div class="principle reveal">
-        <span class="num">i.</span>
-        <div>
-          <h3>A design system is not a component library.</h3>
-          <p>It is a shared language for how the product feels. Components are the sentences; tokens, motion, tone and rhythm are the grammar. If the grammar is right, the sentences write themselves.</p>
-        </div>
-      </div>
-      <div class="principle reveal">
-        <span class="num">ii.</span>
-        <div>
-          <h3>The best tokens are the ones designers stop noticing.</h3>
-          <p>A token that fits is invisible — reached for like a keyboard shortcut, not consulted like a specification. If designers still Cmd-F for hex values, the system has more work to do.</p>
-        </div>
-      </div>
-      <div class="principle reveal">
-        <span class="num">iii.</span>
-        <div>
-          <h3>Themes are first-class objects, not skins.</h3>
-          <p>Different products, moments and audiences need different rooms — same house, different rooms. Treat a theme as versioned and shippable, packaged like an npm module, not a stack of overrides.</p>
-        </div>
-      </div>
-      <div class="principle reveal">
-        <span class="num">iv.</span>
-        <div>
-          <h3>The Figma–code seam is where the system lives or dies.</h3>
-          <p>Design that can't leave Figma is a mood board. Code that can't be redrawn in Figma is a black box. The tooling that keeps the two mutually legible is not overhead — it is the system.</p>
-        </div>
-      </div>
+      <div class="principle reveal"><span class="num">i.</span><div><h4>A design system is not a component library.</h4><p>It is a shared language for how the product feels. Components are the sentences; tokens, motion, tone and rhythm are the grammar. If the grammar is right, the sentences write themselves.</p></div></div>
+      <div class="principle reveal"><span class="num">ii.</span><div><h4>The best tokens are the ones designers stop noticing.</h4><p>A token that fits is invisible — reached for like a keyboard shortcut, not consulted like a specification. If designers still Cmd-F for hex values, the system has more work to do.</p></div></div>
+      <div class="principle reveal"><span class="num">iii.</span><div><h4>Themes are first-class objects, not skins.</h4><p>Different products, moments and audiences need different rooms — same house, different rooms. Treat a theme as versioned and shippable, packaged like an npm module, not a stack of overrides.</p></div></div>
+      <div class="principle reveal"><span class="num">iv.</span><div><h4>The Figma–code seam is where the system lives or dies.</h4><p>Design that can't leave Figma is a mood board. Code that can't be redrawn in Figma is a black box. The tooling that keeps the two mutually legible is not overhead — it is the system.</p></div></div>
     </div>
   </section>
 
-  <!-- ════════════════════════════════════════════════ SELECTED WORK ════════════════════════════════════════════════ -->
-  <section class="container-outer" id="work" style="padding-bottom: 128px;">
-    <div class="section-head reveal">
-      <div class="eyebrow">§ 02 — Selected work</div>
-      <h2 class="title">Three surfaces of <em>one</em> system.</h2>
-    </div>
-
-    <div class="works-grid">
-
-      <!-- Water (main, spans 8 cols right side) -->
-      <article class="work-item w1 reveal">
-        <a href="https://water.devops.xiaohongshu.com/" target="_blank" rel="noopener noreferrer" class="work-link" aria-label="Water design system — 2023 to present">
-          <div class="work-thumb w1">
-            <span class="work-tag">Design system</span>
-            <svg viewBox="0 0 1332 750" preserveAspectRatio="xMidYMid slice">
-              <defs>
-                <linearGradient id="wg1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#2D6CA8" stop-opacity="0.32"/>
-                  <stop offset="1" stop-color="#2D6CA8" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <path d="M 0 380 Q 333 300 666 360 T 1332 320 L 1332 750 L 0 750 Z" fill="url(#wg1)"/>
-              <path d="M 0 460 Q 333 400 666 445 T 1332 420" fill="none" stroke="#2D6CA8" stroke-width="1.2" opacity="0.35"/>
-              <path d="M 0 540 Q 333 490 666 525 T 1332 505" fill="none" stroke="#2D6CA8" stroke-width="1.2" opacity="0.22"/>
-              <g font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.7">
-                <text x="80" y="120">tokens</text>
-                <text x="80" y="150">components</text>
-                <text x="80" y="180">motion</text>
-                <text x="80" y="210">themes</text>
-                <text x="80" y="240">docs</text>
-              </g>
-              <g transform="translate(940, 96)" font-family="JetBrains Mono" font-size="17">
-                <rect x="0" y="0" width="300" height="220" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                <rect x="0" y="0" width="300" height="42" fill="currentColor" opacity="0.1"/>
-                <circle cx="42" cy="100" r="12" fill="#DC5A2A"/>
-                <rect x="76" y="88" width="160" height="10" fill="currentColor" opacity="0.4"/>
-                <rect x="76" y="106" width="106" height="10" fill="currentColor" opacity="0.25"/>
-                <rect x="40" y="152" width="220" height="10" fill="currentColor" opacity="0.15"/>
-                <rect x="40" y="172" width="140" height="10" fill="currentColor" opacity="0.15"/>
-              </g>
-            </svg>
-          </div>
-          <div class="work-meta">
-            <span class="title">Water<sup style="font-family:'Instrument Serif',serif;font-style:italic;font-size:0.55em;color:var(--accent);vertical-align:super;">™</sup></span>
-            <div class="right">
-              <span>2023 —</span>
-              <span class="kind"><span>system</span><span>↗</span></span>
-            </div>
-          </div>
-          <p class="work-desc">The design system for the product surface at <span class="redact"><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span><span aria-hidden="true">■</span></span> — ReDS (mobile) and DDS (desktop), tokens, motion, and docs.</p>
-        </a>
-      </article>
-
-      <!-- Theme Store (5 cols left) -->
-      <article class="work-item w2 reveal">
-        <a href="https://water.devops.xiaohongshu.com/themes" target="_blank" rel="noopener noreferrer" class="work-link" aria-label="Theme Store — 2024 to present">
-          <div class="work-thumb w2">
-            <span class="work-tag">Theme management</span>
-            <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-              <g transform="translate(170, 160)">
-                <rect x="0" y="0" width="360" height="500" rx="16" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/>
-                <rect x="0" y="0" width="360" height="250" fill="#DC5A2A"/>
-                <circle cx="76" cy="76" r="20" fill="var(--bg-elevated)" opacity="0.9"/>
-                <rect x="32" y="292" width="220" height="22" fill="currentColor" opacity="0.7"/>
-                <rect x="32" y="332" width="140" height="16" fill="currentColor" opacity="0.35"/>
-                <text x="32" y="440" font-family="JetBrains Mono" font-size="24" fill="currentColor" opacity="0.6">brand.candy</text>
-              </g>
-              <g transform="translate(620, 220)">
-                <rect x="0" y="0" width="360" height="500" rx="16" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/>
-                <rect x="0" y="0" width="360" height="250" fill="#1A4A6E"/>
-                <circle cx="76" cy="76" r="20" fill="var(--bg-elevated)" opacity="0.9"/>
-                <rect x="32" y="292" width="220" height="22" fill="currentColor" opacity="0.7"/>
-                <rect x="32" y="332" width="140" height="16" fill="currentColor" opacity="0.35"/>
-                <text x="32" y="440" font-family="JetBrains Mono" font-size="24" fill="currentColor" opacity="0.6">deep.night</text>
-              </g>
-              <g transform="translate(1070, 160)">
-                <rect x="0" y="0" width="360" height="500" rx="16" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/>
-                <rect x="0" y="0" width="360" height="250" fill="#3B6F3B"/>
-                <circle cx="76" cy="76" r="20" fill="var(--bg-elevated)" opacity="0.9"/>
-                <rect x="32" y="292" width="220" height="22" fill="currentColor" opacity="0.7"/>
-                <rect x="32" y="332" width="140" height="16" fill="currentColor" opacity="0.35"/>
-                <text x="32" y="440" font-family="JetBrains Mono" font-size="24" fill="currentColor" opacity="0.6">forest.7</text>
-              </g>
-              <text x="800" y="820" font-family="JetBrains Mono" font-size="22" fill="currentColor" opacity="0.5" text-anchor="middle">figma variables → npm package · 1 minute</text>
-            </svg>
-          </div>
-          <div class="work-meta">
-            <span class="title">Theme Store</span>
-            <div class="right">
-              <span>2024 —</span>
-              <span class="kind"><span>owned</span><span>↗</span></span>
-            </div>
-          </div>
-          <p class="work-desc">Turn Figma variables into versioned theme packages — engineers <span class="font-mono" style="color:var(--label-1);">npm install</span> them across 5 platforms in a minute.</p>
-        </a>
-      </article>
-
-      <!-- Water Figma Plugin (5 cols right) -->
-      <article class="work-item w3 reveal">
-        <a href="https://www.figma.com/community/plugin/1397510659438561031/water" target="_blank" rel="noopener noreferrer" class="work-link" aria-label="Water Figma Plugin — 2024 to present">
-          <div class="work-thumb w3">
-            <span class="work-tag">Figma plugin</span>
-            <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-              <rect x="130" y="90" width="1340" height="720" rx="24" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/>
-              <rect x="130" y="90" width="1340" height="72" fill="currentColor" opacity="0.06"/>
-              <circle cx="188" cy="126" r="10" fill="#DC5A2A"/>
-              <circle cx="220" cy="126" r="10" fill="currentColor" opacity="0.25"/>
-              <circle cx="252" cy="126" r="10" fill="currentColor" opacity="0.25"/>
-              <text x="292" y="133" font-family="JetBrains Mono" font-size="24" fill="currentColor" opacity="0.7">Water · 一个充满魔法的小小工具箱</text>
-
-              <g transform="translate(200, 220)" font-family="JetBrains Mono" font-size="26" fill="currentColor">
-                <rect x="0" y="0" width="46" height="46" rx="8" fill="#DC5A2A"/>
-                <text x="72" y="34" opacity="0.85">Spec check</text>
-                <text x="900" y="34" opacity="0.4">▸ scan</text>
-
-                <rect x="0" y="92" width="46" height="46" rx="8" fill="#1A4A6E"/>
-                <text x="72" y="126" opacity="0.85">Token detection</text>
-                <text x="900" y="126" opacity="0.4">▸ 12 issues</text>
-
-                <rect x="0" y="184" width="46" height="46" rx="8" fill="#3B6F3B"/>
-                <text x="72" y="218" opacity="0.85">Variable source switch</text>
-                <text x="900" y="218" opacity="0.4">▸ 1 mode</text>
-
-                <rect x="0" y="276" width="46" height="46" rx="8" fill="#B58A2C"/>
-                <text x="72" y="310" opacity="0.85">Accessibility voiceover</text>
-                <text x="900" y="310" opacity="0.4">▸ WIP</text>
-
-                <rect x="0" y="368" width="46" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 6"/>
-                <text x="72" y="402" opacity="0.5">Multi-language · wip</text>
-
-                <text x="0" y="490" opacity="0.4" font-size="20">↳ dev mode: Delight D2C → code</text>
-              </g>
-            </svg>
-          </div>
-          <div class="work-meta">
-            <span class="title">Water · Figma Plugin</span>
-            <div class="right">
-              <span>2024 —</span>
-              <span class="kind"><span>public</span><span>↗</span></span>
-            </div>
-          </div>
-          <p class="work-desc">"A small magical toolbox for Figma." Design-mode: 5 checks & switches. Dev-mode: instance → Delight code → VSCode.</p>
-        </a>
-      </article>
-
-      <!-- Water Ecosystem (small) -->
-      <article class="work-item w4 reveal">
-        <a href="#" class="work-link" aria-label="Water Ecosystem — writeup in progress">
-          <div class="work-thumb w4">
-            <span class="work-tag">Ecosystem</span>
-            <svg viewBox="0 0 1440 936" preserveAspectRatio="xMidYMid slice">
-              <g transform="translate(720, 468)">
-                <circle r="112" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
-                <text y="12" text-anchor="middle" font-family="Space Grotesk" font-size="56" fill="currentColor" font-weight="500">Water</text>
-                <text y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.55">design system</text>
-              </g>
-              <g font-family="JetBrains Mono" font-size="20" fill="currentColor">
-                <g transform="translate(260, 240)">
-                  <circle r="72" fill="none" stroke="#DC5A2A" stroke-width="1.5" opacity="0.6"/>
-                  <text y="4" text-anchor="middle" font-family="Space Grotesk" font-size="34" font-weight="500">BRIDGE</text>
-                  <text y="34" text-anchor="middle" font-size="16" opacity="0.6">visual assets</text>
-                </g>
-                <g transform="translate(1180, 240)">
-                  <circle r="72" fill="none" stroke="#1A4A6E" stroke-width="1.5" opacity="0.6"/>
-                  <text y="4" text-anchor="middle" font-family="Space Grotesk" font-size="34" font-weight="500">PART</text>
-                  <text y="34" text-anchor="middle" font-size="16" opacity="0.6">business</text>
-                </g>
-                <g transform="translate(260, 720)">
-                  <circle r="72" fill="none" stroke="#3B6F3B" stroke-width="1.5" opacity="0.6"/>
-                  <text y="4" text-anchor="middle" font-family="Space Grotesk" font-size="34" font-weight="500">OCEAN</text>
-                  <text y="34" text-anchor="middle" font-size="16" opacity="0.6">i18n · copy</text>
-                </g>
-                <g transform="translate(1180, 720)">
-                  <circle r="72" fill="none" stroke="#B58A2C" stroke-width="1.5" opacity="0.6"/>
-                  <text y="4" text-anchor="middle" font-family="Space Grotesk" font-size="34" font-weight="500">DITTO</text>
-                  <text y="34" text-anchor="middle" font-size="16" opacity="0.6">page builder</text>
-                </g>
-                <g transform="translate(720, 130)">
-                  <circle r="64" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>
-                  <text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="30" font-weight="500">ROBIN</text>
-                  <text y="28" text-anchor="middle" font-size="16" opacity="0.55">NPS</text>
-                </g>
-              </g>
-              <g stroke="currentColor" stroke-width="1" opacity="0.28" fill="none">
-                <line x1="720" y1="468" x2="260" y2="240"/>
-                <line x1="720" y1="468" x2="1180" y2="240"/>
-                <line x1="720" y1="468" x2="260" y2="720"/>
-                <line x1="720" y1="468" x2="1180" y2="720"/>
-                <line x1="720" y1="468" x2="720" y2="130"/>
-              </g>
-            </svg>
-          </div>
-          <div class="work-meta">
-            <span class="title">Water Ecosystem</span>
-            <div class="right">
-              <span>2023 —</span>
-              <span class="kind"><span>writeup</span><span>→</span></span>
-            </div>
-          </div>
-        </a>
-      </article>
-
-    </div>
-  </section>
-
-  <!-- ════════════════════════════════════════════════ STICKY PIN "BUILT AT THE SEAM" ════════════════════════════════════════════════ -->
+  <!-- STICKY PIN -->
   <div class="pin-outer">
     <div class="pin-sticky">
       <span class="pin-word" id="pin-1">Built</span>
@@ -964,13 +589,13 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════ CONTACT ════════════════════════════════════════════════ -->
+  <!-- CONTACT -->
   <section class="contact container-outer" id="contact">
     <div class="contact-grid reveal">
       <span class="c1">Let's</span>
       <span class="c2">build</span>
       <span class="c3">something</span>
-      <span class="c4"><em style="font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-variation-settings:normal;color:var(--accent);">quietly</em>.</span>
+      <span class="c4"><em class="serif">quietly</em>.</span>
     </div>
     <div class="contact-links">
       <span></span>
@@ -988,85 +613,113 @@
   <span id="footer-week">Week --/52</span>
 </footer>
 
+<!-- Lenis smooth scroll -->
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
 <script>
+  /* ───────────── THEME (system / light / dark) ───────────── */
   const html = document.documentElement;
   const themeStates = ['system', 'light', 'dark'];
-  const themeLetterMap = { system: 'A', light: 'B', dark: 'C' };
+  const letterMap = { system: 'A', light: 'B', dark: 'C' };
   const themeLetter = document.getElementById('theme-letter');
-
   function setTheme(t) {
     html.classList.remove('system', 'light', 'dark');
     html.classList.add(t);
-    themeLetter.textContent = themeLetterMap[t];
+    themeLetter.textContent = letterMap[t];
     try { localStorage.setItem('qy-theme', t); } catch(e) {}
   }
-  try {
-    const saved = localStorage.getItem('qy-theme');
-    if (saved && themeStates.includes(saved)) setTheme(saved);
-    else setTheme('system');
-  } catch(e) { setTheme('system'); }
-
+  try { const s = localStorage.getItem('qy-theme'); setTheme(themeStates.includes(s) ? s : 'system'); } catch(e) { setTheme('system'); }
   document.getElementById('theme-toggle').addEventListener('click', () => {
     const now = themeStates.find(t => html.classList.contains(t)) || 'system';
-    const next = themeStates[(themeStates.indexOf(now) + 1) % themeStates.length];
-    setTheme(next);
+    setTheme(themeStates[(themeStates.indexOf(now) + 1) % themeStates.length]);
   });
 
-  // Clock
+  /* ───────────── LENIS SMOOTH SCROLL ───────────── */
+  let lenis = null;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (window.Lenis && !prefersReduced) {
+    lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1, smoothWheel: true });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+    lenis.on('scroll', onScroll);
+  } else {
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+  // Anchor links → lenis.scrollTo (or native fallback)
+  document.querySelectorAll('[data-scroll]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href');
+      if (!id || !id.startsWith('#')) return;
+      const target = id === '#top' ? 0 : document.querySelector(id);
+      if (target === null) return;
+      e.preventDefault();
+      if (lenis) lenis.scrollTo(target, { offset: -80 });
+      else (id === '#top' ? window.scrollTo({top:0,behavior:'smooth'}) : document.querySelector(id).scrollIntoView({behavior:'smooth'}));
+    });
+  });
+
+  /* ───────────── CLOCK ───────────── */
   const clockEl = document.getElementById('hud-clock');
   const weekEl = document.getElementById('footer-week');
   function tick() {
     const d = new Date();
-    const utc = d.getTime() + d.getTimezoneOffset() * 60000;
-    const g = new Date(utc + 8 * 3600000);
-    const hh = String(g.getHours()).padStart(2, '0');
-    const mm = String(g.getMinutes()).padStart(2, '0');
-    const ss = String(g.getSeconds()).padStart(2, '0');
-    if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss} GMT+8`;
-    const target = new Date(Date.UTC(g.getFullYear(), g.getMonth(), g.getDate()));
-    const day = target.getUTCDay() || 7;
-    target.setUTCDate(target.getUTCDate() + 4 - day);
-    const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
-    const week = Math.ceil(((target - yearStart) / 86400000 + 1) / 7);
-    if (weekEl) weekEl.textContent = `Week ${String(week).padStart(2, '0')}/52`;
+    const g = new Date(d.getTime() + d.getTimezoneOffset() * 60000 + 8 * 3600000);
+    const p = n => String(n).padStart(2, '0');
+    if (clockEl) clockEl.textContent = `${p(g.getHours())}:${p(g.getMinutes())}:${p(g.getSeconds())} GMT+8`;
+    const t = new Date(Date.UTC(g.getFullYear(), g.getMonth(), g.getDate()));
+    const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+    const ys = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    const wk = Math.ceil(((t - ys) / 86400000 + 1) / 7);
+    if (weekEl) weekEl.textContent = `Week ${p(wk)}/52`;
   }
   tick(); setInterval(tick, 1000);
 
-  // Cursor coords
+  /* ───────────── CURSOR COORDS ───────────── */
   const coordsEl = document.getElementById('hud-coords');
   window.addEventListener('pointermove', (e) => {
     if (!coordsEl) return;
-    const x = String(Math.round(e.clientX)).padStart(4, '0');
-    const y = String(Math.round(e.clientY)).padStart(4, '0');
-    coordsEl.textContent = `${x} X ${y} Y`;
+    const p = n => String(Math.round(n)).padStart(4, '0');
+    coordsEl.textContent = `${p(e.clientX)} X ${p(e.clientY)} Y`;
   });
 
-  // Right-edge scroll indicator
+  /* ───────────── SCROLL-DRIVEN (indicator + pin) ───────────── */
   const scrollFill = document.getElementById('scroll-fill');
-  function updateScrollIndicator() {
-    if (!scrollFill) return;
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    if (max <= 0) return;
-    const p = Math.min(1, Math.max(0, window.scrollY / max));
-    const trackStart = 6;
-    const trackEnd = 194;
-    const dotHeight = 20;
-    const availableTrack = (trackEnd - trackStart) - dotHeight;
-    const top = trackStart + p * availableTrack;
-    const bottom = top + dotHeight;
-    scrollFill.setAttribute('d', `M 16 ${top} V ${bottom}`);
+  const pinOuter = document.querySelector('.pin-outer');
+  const pinWords = [document.getElementById('pin-1'), document.getElementById('pin-2'), document.getElementById('pin-3')];
+  function onScroll() {
+    const y = window.scrollY;
+    // indicator
+    if (scrollFill) {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (max > 0) {
+        const pr = Math.min(1, Math.max(0, y / max));
+        const start = 6, end = 194, dot = 20;
+        const top = start + pr * ((end - start) - dot);
+        scrollFill.setAttribute('d', `M 16 ${top.toFixed(1)} V ${(top + dot).toFixed(1)}`);
+      }
+    }
+    // pin
+    if (pinOuter) {
+      const r = pinOuter.getBoundingClientRect();
+      const total = pinOuter.offsetHeight - window.innerHeight;
+      const scrolled = -r.top;
+      if (scrolled >= 0 && total > 0) {
+        const pr = scrolled / total;
+        pinWords.forEach((w, i) => { if (w) w.classList.toggle('in', pr >= (i + 1) / (pinWords.length + 1) - 0.15); });
+      } else if (scrolled < 0) {
+        pinWords.forEach(w => w && w.classList.remove('in'));
+      }
+    }
   }
-  updateScrollIndicator();
-  window.addEventListener('scroll', updateScrollIndicator, { passive: true });
-  window.addEventListener('resize', updateScrollIndicator, { passive: true });
+  onScroll();
+  window.addEventListener('resize', onScroll, { passive: true });
 
-  // Scroll reveal
+  /* ───────────── REVEAL ───────────── */
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
   }, { threshold: 0.14, rootMargin: '0px 0px -60px 0px' });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-  // SVG hand-drawn signature — trigger draw when in view
+  /* ───────────── HAND-DRAWN SIGNATURE ───────────── */
   const sign = document.querySelector('.svg-sign');
   if (sign) {
     const sio = new IntersectionObserver((entries) => {
@@ -1075,28 +728,98 @@
     sio.observe(sign);
   }
 
-  // Sticky pin section — fade words based on scroll position
-  const pinOuter = document.querySelector('.pin-outer');
-  const pinWords = [document.getElementById('pin-1'), document.getElementById('pin-2'), document.getElementById('pin-3')];
-  function updatePin() {
-    if (!pinOuter) return;
-    const r = pinOuter.getBoundingClientRect();
-    const total = pinOuter.offsetHeight - window.innerHeight;
-    const scrolled = -r.top;
-    if (scrolled < 0 || scrolled > total) {
-      // outside — reset only if very far
-      if (scrolled < 0) pinWords.forEach(w => w && w.classList.remove('in'));
-      return;
+  /* ───────────── HALFTONE DOT-MATRIX BACKGROUND (replicates haoqi MaskedDotsEffect) ───────────── */
+  (function () {
+    const canvas = document.getElementById('dots');
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const GRID = 30;              // px between dot centers (pixelSize)
+    const FEATHER = 0.5;
+    let raf = 0, start = null;
+
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    const p = scrolled / total; // 0 → 1
-    pinWords.forEach((w, i) => {
-      if (!w) return;
-      const threshold = (i + 1) / (pinWords.length + 1); // 0.25, 0.5, 0.75
-      w.classList.toggle('in', p >= threshold - 0.15);
-    });
-  }
-  updatePin();
-  window.addEventListener('scroll', updatePin, { passive: true });
+
+    function inkRGB() {
+      // read --label ("0,0,0" or "255,255,255")
+      const v = getComputedStyle(html).getPropertyValue('--label').trim();
+      return v || '0,0,0';
+    }
+
+    function smoothstep(a, b, x) {
+      const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    }
+
+    function frame(ts) {
+      if (start === null) start = ts;
+      const elapsed = (ts - start) / 1000;
+
+      // Intro reveal: holeRadius grows 0 → 1.9 over 1.4s (dots fill then recede to edges)
+      const introT = smoothstep(0, 1.4, elapsed);
+      const introHole = introT * 1.9;
+
+      // Idle breathing of holeRadius around ~1.62 (subtle) + tiny drift
+      const breathe = 1.62 + Math.sin(elapsed * 0.5) * 0.06;
+      const holeRadius = elapsed < 1.5 ? introHole : breathe;
+
+      // idle overall opacity (very subtle); a touch stronger during intro
+      const idleAlpha = 0.10;
+      const introAlpha = 0.22;
+      const globalA = elapsed < 1.5 ? (introAlpha - (introAlpha - idleAlpha) * introT) : idleAlpha;
+
+      // focus drift
+      const cx = W * (0.5 + Math.sin(elapsed * 0.13) * 0.04);
+      const cy = H * (0.42 + Math.cos(elapsed * 0.11) * 0.04);
+      const aspect = W / H;
+
+      ctx.clearRect(0, 0, W, H);
+      const rgb = inkRGB();
+      const maxR = GRID * 0.42;
+
+      for (let gy = GRID / 2; gy < H; gy += GRID) {
+        for (let gx = GRID / 2; gx < W; gx += GRID) {
+          // normalized coords relative to drifting focus, in [-1,1]-ish
+          let px = (gx - cx) / (W / 2);
+          let py = (gy - cy) / (H / 2);
+          if (aspect > 1) px *= aspect; else py /= Math.max(aspect, 0.0001);
+          const d = Math.sqrt(px * px + py * py);
+          const edge = Math.max(FEATHER, holeRadius * 0.12);
+          // hole in center → 0, outside → 1
+          const a = smoothstep(holeRadius, holeRadius + edge, d);
+          if (a <= 0.01) continue;
+          const r = maxR * a;
+          if (r < 0.3) continue;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(${rgb}, ${(a * globalA).toFixed(3)})`;
+          ctx.arc(gx, gy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // keep animating (cheap); stop the intro-specific work after settle but keep gentle idle drift
+      raf = requestAnimationFrame(frame);
+    }
+
+    resize();
+    window.addEventListener('resize', () => { resize(); }, { passive: true });
+    if (prefersReduced) {
+      // static single paint at idle hole
+      start = -1000; // pretend elapsed large
+      const ts0 = 1600;
+      frame(ts0);
+      cancelAnimationFrame(raf);
+    } else {
+      raf = requestAnimationFrame(frame);
+    }
+  })();
 </script>
 </body>
 </html>
