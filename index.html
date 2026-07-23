@@ -1,604 +1,1140 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="A">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Quan Yin — Design × Engineering</title>
-<meta name="description" content="Quan Yin. Design engineering and AI-native tools for design systems at scale." />
-<script src="https://cdn.tailwindcss.com"></script>
+<meta name="description" content="Quan Yin. Design engineering & AI-native tooling. I build Theme Store and the Water Figma plugin — the tools that make a design system feel invisible." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  :root, [data-theme="A"] {
-    --paper: #EFEAE0;
-    --paper-2: #E5DECF;
-    --line: #C7BBA3;
-    --ink: #0F0D0A;
+  html.light {
+    --paper: #FBFAF4;
+    --paper-2: #F2ECDF;
+    --line: #DDD5C4;
+    --line-strong: #B8AC97;
+    --ink: #0A0908;
     --ink-2: #3A342A;
     --ink-3: #7A6F5D;
     --mute: #A9A08C;
-    --accent: #B94A22;
-    --accent-2: #7E2E11;
+    --accent: #DC5A2A;
+    --accent-2: #9E3C15;
+    --redact: #0A0908;
   }
-  [data-theme="B"] {
-    --paper: #0E0C0A;
-    --paper-2: #17140F;
-    --line: #2C261E;
-    --ink: #EFEAE0;
-    --ink-2: #C4B9A0;
+  html.dark {
+    --paper: #0B0A08;
+    --paper-2: #14120E;
+    --line: #2A241C;
+    --line-strong: #453D31;
+    --ink: #F5F0E6;
+    --ink-2: #B8AC97;
     --ink-3: #7A6F5D;
-    --mute: #4A4238;
-    --accent: #E56A3F;
-    --accent-2: #FFB870;
+    --mute: #514738;
+    --accent: #FF8B4C;
+    --accent-2: #FFB579;
+    --redact: #F5F0E6;
   }
-  * { -webkit-font-smoothing: antialiased; }
+  @media (prefers-color-scheme: dark) {
+    html.system {
+      --paper: #0B0A08;
+      --paper-2: #14120E;
+      --line: #2A241C;
+      --line-strong: #453D31;
+      --ink: #F5F0E6;
+      --ink-2: #B8AC97;
+      --ink-3: #7A6F5D;
+      --mute: #514738;
+      --accent: #FF8B4C;
+      --accent-2: #FFB579;
+      --redact: #F5F0E6;
+    }
+  }
+  @media (prefers-color-scheme: light) {
+    html.system {
+      --paper: #FBFAF4;
+      --paper-2: #F2ECDF;
+      --line: #DDD5C4;
+      --line-strong: #B8AC97;
+      --ink: #0A0908;
+      --ink-2: #3A342A;
+      --ink-3: #7A6F5D;
+      --mute: #A9A08C;
+      --accent: #DC5A2A;
+      --accent-2: #9E3C15;
+      --redact: #0A0908;
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
     background: var(--paper);
     color: var(--ink);
-    font-family: 'Instrument Sans', system-ui, sans-serif;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
     overflow-x: hidden;
     transition: background .35s ease, color .35s ease;
-    font-feature-settings: "ss01";
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "ss02", "ss04";
+    font-size: 16px;
+    line-height: 1.5;
   }
-  .font-display { font-family: 'Space Grotesk', 'Instrument Sans', sans-serif; letter-spacing: -0.035em; line-height: 0.94; }
-  .font-serif { font-family: 'Instrument Serif', 'Times New Roman', serif; letter-spacing: -0.01em; }
-  .font-serif-italic { font-family: 'Instrument Serif', serif; font-style: italic; }
-  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.01em; }
+  .font-serif { font-family: 'Instrument Serif', 'Times New Roman', serif; letter-spacing: -0.005em; }
+  .font-serif-italic { font-family: 'Instrument Serif', serif; font-style: italic; letter-spacing: -0.015em; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
 
-  /* subtle paper texture */
+  /* Grain */
   body::before {
     content: '';
     position: fixed; inset: 0; z-index: 200; pointer-events: none;
-    opacity: 0.06;
+    opacity: 0.055;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     mix-blend-mode: multiply;
   }
-  [data-theme="B"] body::before, [data-theme="B"]::before { mix-blend-mode: screen; opacity: 0.08; }
+  html.dark body::before { mix-blend-mode: screen; opacity: 0.075; }
 
-  .rule { height: 1px; background: var(--line); }
-  .rule-ink { height: 1px; background: var(--ink); opacity: .45; }
-  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
-
-  /* HUD chrome */
-  .hud {
-    background: transparent;
-    border-bottom: 1px solid var(--line);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    color: var(--ink-2);
-  }
-  .hud-cell { padding: 8px 14px; border-right: 1px solid var(--line); display: flex; align-items: center; gap: 6px; white-space: nowrap; min-height: 34px; }
-  .hud-cell:last-child { border-right: none; }
-  .hud-btn { cursor: pointer; background: transparent; border: none; color: inherit; font: inherit; padding: 0; }
-  .hud-btn:hover { color: var(--accent); }
-  .hud-btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
-
-  /* Redaction bar */
-  .redact {
-    display: inline-block;
-    background: var(--ink);
-    color: transparent;
-    padding: 0 0.35em;
-    margin: 0 0.05em;
-    letter-spacing: -0.02em;
-    user-select: none;
-    vertical-align: middle;
-    line-height: 0.85;
-    transition: background .35s;
-  }
-  .redact::selection { background: transparent; }
-
-  /* Work card */
-  .work-card {
-    display: block;
-    padding: 28px 28px 26px;
-    border: 1px solid var(--line);
-    background: var(--paper);
-    transition: border-color .35s ease, transform .35s cubic-bezier(.16,1,.3,1), background .35s;
-    position: relative;
-    overflow: hidden;
-  }
-  .work-card:hover { border-color: var(--ink); transform: translateY(-3px); }
-  .work-card .thumb {
-    aspect-ratio: 4/3;
-    border: 1px solid var(--line);
-    background: var(--paper-2);
-    margin-bottom: 22px;
-    position: relative;
-    overflow: hidden;
-  }
-  .thumb svg { display: block; width: 100%; height: 100%; }
-
+  a { color: inherit; text-decoration: none; }
   ::selection { background: var(--accent); color: var(--paper); }
 
   a:focus-visible, button:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px;
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 1px;
   }
 
-  /* Rise-in stagger on load */
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(24px); filter: blur(4px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  /* ================================================== HUD FRAME ================================================== */
+
+  .hud {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    padding: 16px 20px;
+    transition: color .35s ease;
   }
-  .rise { animation: rise 900ms cubic-bezier(.16,1,.3,1) both; }
-  .rise-1 { animation-delay: .05s; }
-  .rise-2 { animation-delay: .16s; }
-  .rise-3 { animation-delay: .28s; }
-  .rise-4 { animation-delay: .40s; }
-  .rise-5 { animation-delay: .54s; }
-
-  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
-  .reveal.in { opacity: 1; transform: none; }
-
-  /* External arrow */
-  .arrow-ext {
-    display: inline-flex; align-items: center; gap: 4px;
-    transition: transform .3s cubic-bezier(.16,1,.3,1);
+  .hud > * { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .hud-cell { pointer-events: auto; display: flex; align-items: center; gap: 12px; }
+  .hud-cell > *:not(:last-child)::after {
+    content: '';
+    display: inline-block;
+    width: 1px; height: 10px; background: var(--line-strong);
+    margin-left: 12px;
+    vertical-align: middle;
   }
-  .work-card:hover .arrow-ext { transform: translate(3px, -3px); }
+  .hud-btn {
+    background: transparent; border: none; font: inherit; color: inherit; cursor: pointer;
+    padding: 0; letter-spacing: inherit; text-transform: inherit;
+  }
+  .hud-btn:hover { color: var(--accent); }
+  .hud-link:hover { color: var(--accent); }
+  .hud .brand-mark {
+    font-weight: 500; color: var(--ink);
+  }
+  .hud .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 999px;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
-  /* Principle numeral */
-  .roman {
+  /* Hide hud cells on very small screens for legibility */
+  @media (max-width: 720px) {
+    .hud-hide-sm { display: none !important; }
+    .hud { padding: 12px 14px; font-size: 10px; }
+  }
+
+  /* ================================================== LAYOUT ================================================== */
+
+  main {
+    padding-top: 68px;      /* leave room for HUD top */
+    padding-bottom: 68px;   /* leave room for HUD bottom */
+  }
+  .container {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  @media (min-width: 720px) { .container { padding: 0 40px; } }
+  @media (min-width: 1200px) { .container { padding: 0 56px; } }
+
+  /* ================================================== HERO ================================================== */
+
+  .hero {
+    padding: 40px 0 96px;
+    position: relative;
+  }
+  .hero .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: clamp(64px, 12vw, 208px);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+  }
+  .hero h1 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .bio {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  @media (min-width: 900px) {
+    .bio { grid-template-columns: 1.4fr 1fr; gap: 80px; }
+  }
+  .bio p {
+    font-size: clamp(17px, 1.4vw, 22px);
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .bio p + p { margin-top: 20px; color: var(--ink-2); }
+  .bio-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    padding-top: 8px;
+  }
+  .bio-meta .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    gap: 16px;
+  }
+  .bio-meta .row:first-child { border-top: 1px solid var(--line); }
+  .bio-meta .row .val { color: var(--ink); text-transform: none; letter-spacing: 0.01em; }
+
+  /* ================================================== REDACTION ================================================== */
+
+  .redact {
+    display: inline-block;
+    background: var(--redact);
+    color: transparent;
+    padding: 0 0.4em;
+    margin: 0 0.06em;
+    border-radius: 1px;
+    letter-spacing: -0.02em;
+    line-height: 0.85;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: background .3s;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7em;
+    user-select: none;
+  }
+  .redact::selection { background: var(--redact); color: transparent; }
+  .redact.revealed {
+    background: transparent;
+    color: var(--ink);
+    padding: 0;
+    letter-spacing: normal;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    cursor: default;
+    user-select: text;
+  }
+  .redact.revealed::selection { background: var(--accent); color: var(--paper); }
+  .passcode-input {
+    display: inline-block;
+    background: var(--paper-2);
+    border: 1px solid var(--line-strong);
+    padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7em;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+    outline: none;
+    width: 100px;
+    border-radius: 2px;
+    animation: shake-ready .3s;
+  }
+  .passcode-input.wrong { animation: shake .3s; border-color: var(--accent); }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+  }
+  @keyframes shake-ready { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ================================================== SECTION HEADS ================================================== */
+
+  .section {
+    padding: 80px 0;
+    border-top: 1px solid var(--line);
+    position: relative;
+  }
+  @media (min-width: 900px) { .section { padding: 128px 0; } }
+
+  .section-head {
+    display: grid; grid-template-columns: 1fr;
+    gap: 24px; margin-bottom: 48px;
+  }
+  @media (min-width: 900px) {
+    .section-head { grid-template-columns: 3fr 9fr; gap: 40px; margin-bottom: 72px; }
+  }
+  .section-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(32px, 5.6vw, 76px);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+  }
+  .section-title em {
     font-family: 'Instrument Serif', serif;
     font-style: italic;
     color: var(--accent);
-    font-size: 32px;
-    line-height: 1;
-    margin-right: 14px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
   }
 
-  /* Thumbnail styles per work */
-  .thumb.water {
-    background:
-      linear-gradient(180deg, rgba(35, 90, 155, 0.08), rgba(35, 90, 155, 0.02)),
-      var(--paper-2);
+  /* ================================================== THESIS SECTION ================================================== */
+
+  .thesis {
+    padding: 96px 0 40px;
   }
-  .thumb.theme {
-    background:
-      repeating-linear-gradient(45deg, rgba(185, 74, 34, 0.08) 0 14px, transparent 14px 28px),
-      var(--paper-2);
+  .thesis h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: clamp(44px, 8vw, 120px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    color: var(--ink);
   }
-  .thumb.plugin {
+  .thesis h2 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .thesis p {
+    margin-top: 40px;
+    max-width: 720px;
+    font-size: clamp(16px, 1.15vw, 20px);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  /* ================================================== PRINCIPLES ================================================== */
+
+  .principles {
+    display: grid; grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  @media (min-width: 900px) { .principles { grid-template-columns: 1fr 1fr; gap: 56px 64px; } }
+
+  .principle {
+    display: flex; gap: 20px;
+  }
+  .principle .num {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 40px;
+    line-height: 0.9;
+    flex-shrink: 0;
+    min-width: 44px;
+  }
+  .principle h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .principle p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  /* ================================================== WORKS ================================================== */
+
+  .works {
+    display: grid; grid-template-columns: 1fr;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  @media (min-width: 720px) { .works { grid-template-columns: 1fr 1fr; } }
+  .work {
+    background: var(--paper);
+    padding: 28px;
+    transition: background .3s, color .3s;
+    position: relative;
+    display: block;
+    cursor: pointer;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+  }
+  .work:hover { background: var(--paper-2); }
+  .work-meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 20px;
+  }
+  .work-thumb {
+    aspect-ratio: 16/9;
     background: var(--paper-2);
+    border: 1px solid var(--line);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .3s, background .3s;
   }
-
-  /* Grid backdrop for hero */
-  .grid-bg {
-    background-image:
-      linear-gradient(to right, var(--line) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
-    background-size: 88px 88px;
-    opacity: 0.35;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 0%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 0%, transparent 75%);
+  .work:hover .work-thumb { border-color: var(--line-strong); }
+  .work-thumb svg { display: block; width: 100%; height: 100%; }
+  .work-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: -0.028em;
+    color: var(--ink);
+    margin-bottom: 12px;
   }
+  .work-title sup {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 0.5em;
+    color: var(--accent);
+    font-weight: 400;
+    vertical-align: super;
+    letter-spacing: 0;
+  }
+  .work-desc {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin-bottom: 20px;
+    flex-grow: 1;
+  }
+  .work-tags {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .work-tags span {
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+  .work-cta {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .work-cta .arrow {
+    color: var(--accent);
+    transition: transform .3s cubic-bezier(.16,1,.3,1);
+  }
+  .work:hover .work-cta .arrow { transform: translate(4px, -4px); }
+  .work.external .work-cta .arrow::after { content: '↗'; }
+  .work.internal .work-cta .arrow::after { content: '→'; }
 
-  /* Tiny status dot */
-  .dot-live { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 8px var(--accent); display: inline-block; animation: dot 2s ease-in-out infinite; }
-  @keyframes dot { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+  /* Thumbnails per work */
+  .thumb-water { background: linear-gradient(180deg, rgba(45, 108, 168, 0.12), rgba(45, 108, 168, 0.02)); }
+  .thumb-theme { background: var(--paper); }
+  .thumb-plugin { background: var(--paper); }
+  .thumb-ecosystem { background: var(--paper); }
+
+  /* ================================================== LETTER GRID ================================================== */
+
+  .letter-grid {
+    padding: 160px 24px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .letter-grid .row {
+    display: flex; flex-wrap: nowrap;
+    justify-content: center;
+    line-height: 0.88;
+    letter-spacing: -0.055em;
+    color: var(--ink);
+  }
+  .letter-grid .row.italic {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+  }
+  .letter-grid .char {
+    display: inline-block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: clamp(48px, 14vw, 220px);
+    line-height: 0.88;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);
+  }
+  .letter-grid .char.italic {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+  }
+  .letter-grid .char.space {
+    width: 0.25em;
+  }
+  .letter-grid.in .char { opacity: 1; transform: translateY(0); }
+
+  /* ================================================== CONTACT ================================================== */
+
+  .contact {
+    padding: 128px 0 96px;
+    text-align: center;
+  }
+  .contact h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: clamp(52px, 10vw, 152px);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+  }
+  .contact h2 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  .contact-links {
+    margin-top: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  .contact-link {
+    padding: 10px 20px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color .25s, color .25s, transform .25s cubic-bezier(.16,1,.3,1);
+  }
+  .contact-link:hover { border-color: var(--ink); color: var(--ink); transform: translateY(-2px); }
+  .contact-link .ico { color: var(--accent); }
+
+  /* ================================================== REVEAL ================================================== */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(28px); filter: blur(4px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+  .rise { animation: rise 1000ms cubic-bezier(.16,1,.3,1) both; }
+  .rise-1 { animation-delay: .05s; }
+  .rise-2 { animation-delay: .18s; }
+  .rise-3 { animation-delay: .32s; }
+  .rise-4 { animation-delay: .48s; }
 </style>
 </head>
 <body>
 
-<!-- HUD TOP BAR -->
-<div class="hud sticky top-0 z-40" style="background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(10px);">
-  <div class="max-w-[1360px] mx-auto flex flex-wrap items-stretch">
-    <div class="hud-cell" style="border-left: 1px solid var(--line);">
-      <span class="font-mono" style="color: var(--ink);">QUAN YIN © 2026</span>
-    </div>
-    <div class="hud-cell hidden md:flex">
-      <span>quanyin.design</span>
-    </div>
-    <div class="hud-cell hidden lg:flex" id="hud-clock">
-      <span>--:--:-- GMT+8 CN</span>
-    </div>
-    <div class="hud-cell hidden lg:flex" id="hud-coords">
-      <span>0000 X 0000 Y</span>
-    </div>
-    <div class="hud-cell ml-auto">
-      <a href="#work" style="color: inherit;" class="hover:text-[color:var(--accent)]">WORK</a>
-    </div>
-    <div class="hud-cell hidden sm:flex">
-      <a href="#notes" style="color: inherit;" class="hover:text-[color:var(--accent)]">NOTES</a>
-    </div>
-    <div class="hud-cell hidden sm:flex">
-      <a href="#contact" style="color: inherit;" class="hover:text-[color:var(--accent)]">CONTACT</a>
+<!-- ==================================================== HUD FRAME ==================================================== -->
+<div class="hud" role="banner" aria-label="Site chrome">
+  <!-- Top row -->
+  <div>
+    <div class="hud-cell">
+      <a href="/" class="hud-link brand-mark">QUAN YIN ©2026</a>
+      <span class="hud-hide-sm">Design.Engineering</span>
     </div>
     <div class="hud-cell">
-      <button class="hud-btn" id="theme-toggle" aria-label="Toggle theme">THEME[<span id="theme-letter">A</span>]</button>
+      <a href="#work" class="hud-link hud-hide-sm">Work</a>
+      <a href="#contact" class="hud-link hud-hide-sm">Contact</a>
+      <button class="hud-btn" id="theme-toggle" aria-label="Toggle theme">Theme:<span id="theme-state">system</span></button>
+      <button class="hud-btn hud-hide-sm" id="sound-toggle" aria-label="Toggle ambient sound">Sound[<span id="sound-state">|</span>]</button>
+    </div>
+  </div>
+  <!-- Bottom row -->
+  <div>
+    <div class="hud-cell hud-hide-sm">
+      <span id="hud-clock">--:--:-- GMT+8</span>
+      <span id="hud-week">Week 30/52</span>
+    </div>
+    <div class="hud-cell">
+      <span id="hud-coords">0000 X 0000 Y</span>
     </div>
   </div>
 </div>
 
-<!-- HERO -->
-<section class="relative overflow-hidden">
-  <div class="absolute inset-0 grid-bg pointer-events-none"></div>
-  <div class="relative max-w-[1360px] mx-auto px-6 sm:px-8 pt-20 pb-16 sm:pt-32 sm:pb-24">
+<main>
 
-    <div class="rise rise-1 eyebrow mb-8 flex items-center gap-3">
-      <span class="dot-live"></span>
-      <span>Portfolio · Volume 02 · 2026 — </span>
-    </div>
+  <!-- ==================================================== HERO ==================================================== -->
+  <section class="hero">
+    <div class="container">
 
-    <h1 class="rise rise-2 font-display text-[72px] sm:text-[124px] lg:text-[176px]">
-      Design<br />
-      &amp; <span class="font-serif-italic" style="color: var(--accent); letter-spacing: -0.02em;">Engineering</span>
-    </h1>
-
-    <div class="grid md:grid-cols-12 gap-6 sm:gap-8 mt-16">
-      <div class="md:col-span-7 rise rise-3">
-        <p class="text-[19px] sm:text-[21px] leading-[1.5]" style="color: var(--ink);">
-          Hi — I'm Quan Yin. I lead the <span class="font-serif-italic">design engineering</span> practice at <span class="redact font-mono">■■■■</span>, focused on the design system, its tooling, and the layer of Figma × code that binds them together.
-        </p>
-        <p class="mt-6 text-[16px] sm:text-[17px] leading-[1.65]" style="color: var(--ink-2);">
-          These days I spend most of my time on <span style="color: var(--ink);">Water</span> — the design system that quietly serves ~<span class="font-mono">40</span> product teams — and on the AI-native tools that grow around it. The line between designing something and building it has gotten blurry, and I like it there.
-        </p>
+      <div class="eyebrow rise rise-1">
+        <span class="dot"></span>
+        <span>Portfolio · Vol. 02 · Currently making</span>
       </div>
-      <div class="md:col-span-4 md:col-start-9 rise rise-4">
-        <div class="font-mono text-[11.5px] leading-[1.75] space-y-3" style="color: var(--ink-3);">
-          <div class="flex justify-between border-b pb-2" style="border-color: var(--line);">
-            <span>PRACTICE</span>
-            <span style="color: var(--ink);">Design × Engineering</span>
-          </div>
-          <div class="flex justify-between border-b pb-2" style="border-color: var(--line);">
-            <span>FOCUS</span>
-            <span style="color: var(--ink);">Design system · AI-native tools</span>
-          </div>
-          <div class="flex justify-between border-b pb-2" style="border-color: var(--line);">
-            <span>AT</span>
-            <span><span class="redact">■■■■■■</span></span>
-          </div>
-          <div class="flex justify-between border-b pb-2" style="border-color: var(--line);">
-            <span>SINCE</span>
-            <span style="color: var(--ink);">Currently</span>
-          </div>
-          <div class="flex justify-between">
-            <span>STATE</span>
-            <span style="color: var(--accent);">Making</span>
-          </div>
+
+      <h1 class="rise rise-2">
+        Design<br />
+        &amp; <em>Engineering</em>
+      </h1>
+
+      <div class="bio">
+        <div class="rise rise-3">
+          <p>
+            Hi — I'm <span style="color: var(--ink);">Quan Yin</span> (景言). I sit at the seam of <span class="font-serif-italic">design engineering</span> and <span class="font-serif-italic">AI-native tooling</span> — where a design system stops being a document and starts running through the pipeline.
+          </p>
+          <p>
+            At <span class="redact" data-secret="小红书 · RED" tabindex="0" role="button" aria-label="Employer name — protected. Click to enter passcode.">■■■■■■</span>, I own <span style="color: var(--ink);">Theme Store</span> and the <span style="color: var(--ink);">Water Figma Plugin</span>. Both live inside Water — our design system — and try to make its invisible layer pleasant to touch.
+          </p>
+        </div>
+        <div class="bio-meta rise rise-4">
+          <div class="row"><span>Practice</span><span class="val">Design × Engineering</span></div>
+          <div class="row"><span>Focus</span><span class="val">Design system · AI-native tooling</span></div>
+          <div class="row"><span>Owns</span><span class="val">Theme Store · Water Figma Plugin</span></div>
+          <div class="row"><span>At</span><span class="val"><span class="redact" data-secret="小红书 · RED" tabindex="0" role="button">■■■■■■</span></span></div>
+          <div class="row"><span>State</span><span class="val" style="color: var(--accent);">Making</span></div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<div class="max-w-[1360px] mx-auto px-6 sm:px-8"><div class="rule-ink"></div></div>
-
-<!-- PHILOSOPHY / NOTES -->
-<section id="notes" class="py-24 sm:py-32">
-  <div class="max-w-[1360px] mx-auto px-6 sm:px-8">
-
-    <div class="grid md:grid-cols-12 gap-6 mb-16">
-      <div class="md:col-span-3 reveal">
-        <div class="eyebrow mb-3">§ 01 — Notes on the practice</div>
-        <div class="font-serif text-[28px] leading-[1.1] mt-6">On design systems, in a few sentences.</div>
-      </div>
-      <div class="md:col-span-8 md:col-start-5 reveal">
-        <p class="text-[15.5px] leading-[1.7] max-w-[640px]" style="color: var(--ink-2);">
-          A short set of positions I keep returning to as I build. Longer versions live inside the company; the shape of them is here.
-        </p>
-      </div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-x-14 gap-y-10">
+  <!-- ==================================================== THESIS ==================================================== -->
+  <section class="thesis">
+    <div class="container">
       <div class="reveal">
-        <div class="flex items-start">
-          <span class="roman">i.</span>
-          <div>
-            <h3 class="font-display text-[24px] sm:text-[28px] mb-3">A design system is not a component library.</h3>
-            <p class="text-[15px] leading-[1.65]" style="color: var(--ink-2);">
-              It is a shared language for how the product feels. Components are the sentences; tokens, motion, tone, and rhythm are the grammar. If the grammar is right, the sentences write themselves.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="reveal">
-        <div class="flex items-start">
-          <span class="roman">ii.</span>
-          <div>
-            <h3 class="font-display text-[24px] sm:text-[28px] mb-3">The best tokens are the ones designers stop noticing.</h3>
-            <p class="text-[15px] leading-[1.65]" style="color: var(--ink-2);">
-              A token that fits is invisible — reached for like a keyboard shortcut, not consulted like a specification. If people still Cmd-F for hex values, the system has more work to do.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="reveal">
-        <div class="flex items-start">
-          <span class="roman">iii.</span>
-          <div>
-            <h3 class="font-display text-[24px] sm:text-[28px] mb-3">Themes are not skins.</h3>
-            <p class="text-[15px] leading-[1.65]" style="color: var(--ink-2);">
-              Themes are the system's admission that different products, moments, and audiences need different rooms — same house, different rooms. Treat a theme as a first-class object, versioned and shippable, not a set of overrides.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="reveal">
-        <div class="flex items-start">
-          <span class="roman">iv.</span>
-          <div>
-            <h3 class="font-display text-[24px] sm:text-[28px] mb-3">The Figma–code seam is where the system lives or dies.</h3>
-            <p class="text-[15px] leading-[1.65]" style="color: var(--ink-2);">
-              Design that can't leave Figma is a mood board. Code that can't be redrawn in Figma is a black box. The tooling that keeps the two mutually legible is not overhead — it is the system.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-16 pt-8 reveal text-[12px] font-mono" style="color: var(--ink-3); border-top: 1px solid var(--line);">
-      <span style="color: var(--ink-2);">→</span> Full essays available on request. Written & maintained internally at <span class="redact">■■■■■■</span>.
-    </div>
-  </div>
-</section>
-
-<div class="max-w-[1360px] mx-auto px-6 sm:px-8"><div class="rule-ink"></div></div>
-
-<!-- WORK -->
-<section id="work" class="py-24 sm:py-32">
-  <div class="max-w-[1360px] mx-auto px-6 sm:px-8">
-
-    <div class="grid md:grid-cols-12 gap-6 mb-14 reveal">
-      <div class="md:col-span-3">
-        <div class="eyebrow mb-3">§ 02 — Selected work</div>
-      </div>
-      <div class="md:col-span-8 md:col-start-5">
-        <h2 class="font-display text-[42px] sm:text-[64px]">
-          Three surfaces of <span class="font-serif-italic" style="color: var(--accent);">one</span> system.
+        <h2>
+          I bring <em>craft &amp; taste</em><br />
+          to design systems.
         </h2>
+        <p>
+          I explore how AI-native workflows can quietly reshape how a design system is built and consumed — instant theming across five platforms, Figma variables becoming production code without hands, design specs checking themselves. The design system stops being a spec people consult and starts being an ambient part of how the team ships.
+        </p>
       </div>
     </div>
+  </section>
 
-    <div class="grid md:grid-cols-3 gap-4">
-
-      <!-- Water -->
-      <a href="#" class="work-card reveal group">
-        <div class="thumb water">
-          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#4A82C4" stop-opacity="0.15"/>
-                <stop offset="1" stop-color="#4A82C4" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <path d="M 0 180 Q 100 150 200 175 T 400 165 L 400 300 L 0 300 Z" fill="url(#wg)"/>
-            <path d="M 0 210 Q 100 185 200 205 T 400 195" fill="none" stroke="#4A82C4" stroke-width="1" opacity="0.35"/>
-            <path d="M 0 240 Q 100 220 200 235 T 400 225" fill="none" stroke="#4A82C4" stroke-width="1" opacity="0.25"/>
-            <!-- token grid overlay -->
-            <g opacity="0.6" font-family="JetBrains Mono" font-size="9" fill="currentColor">
-              <text x="24" y="40">tokens</text>
-              <text x="24" y="56">components</text>
-              <text x="24" y="72">motion</text>
-              <text x="24" y="88">themes</text>
-            </g>
-            <g transform="translate(280, 30)">
-              <rect x="0" y="0" width="90" height="60" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
-              <rect x="0" y="0" width="90" height="12" fill="currentColor" opacity="0.15"/>
-              <circle cx="12" cy="30" r="4" fill="#B94A22"/>
-              <rect x="24" y="26" width="50" height="4" fill="currentColor" opacity="0.4"/>
-              <rect x="24" y="34" width="34" height="4" fill="currentColor" opacity="0.25"/>
-            </g>
-          </svg>
-        </div>
-        <div class="flex items-center justify-between mb-3">
-          <span class="font-mono text-[10.5px] tracking-widest" style="color: var(--ink-3);">01 · DESIGN SYSTEM</span>
-          <span class="font-mono text-[10.5px]" style="color: var(--ink-3);">2023 —</span>
-        </div>
-        <h3 class="font-display text-[28px] leading-none mb-2">Water<sup class="font-serif-italic text-[16px]" style="color: var(--accent);">™</sup></h3>
-        <p class="text-[13.5px] leading-[1.55] mb-4" style="color: var(--ink-2);">
-          The design system that serves the whole surface of <span class="redact">■■■■■■</span> — tokens, components, motion, themes, and the docs and tooling around them.
-        </p>
-        <div class="flex items-center justify-between text-[11px] font-mono" style="color: var(--ink-3);">
-          <span>~40 product teams · v3.x</span>
-          <span class="arrow-ext" style="color: var(--accent);">visit ↗</span>
-        </div>
-      </a>
-
-      <!-- Theme Store -->
-      <a href="#" class="work-card reveal group">
-        <div class="thumb theme">
-          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <g transform="translate(30, 40)">
-              <rect x="0" y="0" width="100" height="130" rx="4" fill="#EFEAE0" stroke="#0F0D0A" stroke-width="0.8"/>
-              <rect x="0" y="0" width="100" height="70" rx="4 4 0 0" fill="#B94A22"/>
-              <rect x="8" y="80" width="60" height="6" fill="#0F0D0A" opacity="0.7"/>
-              <rect x="8" y="92" width="40" height="4" fill="#0F0D0A" opacity="0.4"/>
-            </g>
-            <g transform="translate(150, 60)">
-              <rect x="0" y="0" width="100" height="130" rx="4" fill="#EFEAE0" stroke="#0F0D0A" stroke-width="0.8"/>
-              <rect x="0" y="0" width="100" height="70" rx="4 4 0 0" fill="#1A4A6E"/>
-              <rect x="8" y="80" width="60" height="6" fill="#0F0D0A" opacity="0.7"/>
-              <rect x="8" y="92" width="40" height="4" fill="#0F0D0A" opacity="0.4"/>
-            </g>
-            <g transform="translate(270, 40)">
-              <rect x="0" y="0" width="100" height="130" rx="4" fill="#EFEAE0" stroke="#0F0D0A" stroke-width="0.8"/>
-              <rect x="0" y="0" width="100" height="70" rx="4 4 0 0" fill="#3B6F3B"/>
-              <rect x="8" y="80" width="60" height="6" fill="#0F0D0A" opacity="0.7"/>
-              <rect x="8" y="92" width="40" height="4" fill="#0F0D0A" opacity="0.4"/>
-            </g>
-            <g font-family="JetBrains Mono" font-size="9" fill="currentColor" opacity="0.5">
-              <text x="24" y="220">candy.v2</text>
-              <text x="144" y="240">deep.night</text>
-              <text x="264" y="220">forest.7</text>
-            </g>
-          </svg>
-        </div>
-        <div class="flex items-center justify-between mb-3">
-          <span class="font-mono text-[10.5px] tracking-widest" style="color: var(--ink-3);">02 · MARKETPLACE</span>
-          <span class="font-mono text-[10.5px]" style="color: var(--ink-3);">2024 —</span>
-        </div>
-        <h3 class="font-display text-[28px] leading-none mb-2">Theme Store</h3>
-        <p class="text-[13.5px] leading-[1.55] mb-4" style="color: var(--ink-2);">
-          A themes marketplace inside the design system. Brand moments and seasonal variations shipped as versioned, first-class themes — not one-off overrides.
-        </p>
-        <div class="flex items-center justify-between text-[11px] font-mono" style="color: var(--ink-3);">
-          <span>&gt; 60 themes · shipped weekly</span>
-          <span class="arrow-ext" style="color: var(--accent);">writeup →</span>
-        </div>
-      </a>
-
-      <!-- Figma Plugin -->
-      <a href="#" class="work-card reveal group">
-        <div class="thumb plugin">
-          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <rect x="30" y="30" width="340" height="240" rx="6" fill="#EFEAE0" stroke="#0F0D0A" stroke-width="0.6"/>
-            <rect x="30" y="30" width="340" height="24" rx="6 6 0 0" fill="#0F0D0A" opacity="0.06"/>
-            <circle cx="46" cy="42" r="3" fill="#B94A22"/>
-            <circle cx="58" cy="42" r="3" fill="#0F0D0A" opacity="0.2"/>
-            <circle cx="70" cy="42" r="3" fill="#0F0D0A" opacity="0.2"/>
-            <text x="90" y="45" font-family="JetBrains Mono" font-size="9" fill="currentColor" opacity="0.6">water · figma plugin</text>
-
-            <!-- token rows -->
-            <g transform="translate(50, 80)" font-family="JetBrains Mono" font-size="10" fill="currentColor">
-              <rect x="0" y="0" width="14" height="14" rx="2" fill="#B94A22"/>
-              <text x="22" y="11" opacity="0.85">color.brand.primary</text>
-              <text x="200" y="11" opacity="0.4">#B94A22</text>
-
-              <rect x="0" y="26" width="14" height="14" rx="2" fill="#1A4A6E"/>
-              <text x="22" y="37" opacity="0.85">color.brand.deep</text>
-              <text x="200" y="37" opacity="0.4">#1A4A6E</text>
-
-              <rect x="0" y="52" width="14" height="14" rx="2" fill="#7A6F5D"/>
-              <text x="22" y="63" opacity="0.85">color.ink.2</text>
-              <text x="200" y="63" opacity="0.4">#3A342A</text>
-
-              <rect x="0" y="78" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 2"/>
-              <text x="22" y="89" opacity="0.5">spacing.md · 12</text>
-
-              <rect x="0" y="104" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 2"/>
-              <text x="22" y="115" opacity="0.5">radius.sm · 6</text>
-
-              <text x="0" y="150" opacity="0.4" font-size="9">↳ synced from water.v3.4.1</text>
-            </g>
-          </svg>
-        </div>
-        <div class="flex items-center justify-between mb-3">
-          <span class="font-mono text-[10.5px] tracking-widest" style="color: var(--ink-3);">03 · TOOLING</span>
-          <span class="font-mono text-[10.5px]" style="color: var(--ink-3);">2024 —</span>
-        </div>
-        <h3 class="font-display text-[28px] leading-none mb-2">Figma Plugin</h3>
-        <p class="text-[13.5px] leading-[1.55] mb-4" style="color: var(--ink-2);">
-          The plugin that keeps Figma and code mutually legible — tokens, components, and variants pulled straight from the system, in one keystroke.
-        </p>
-        <div class="flex items-center justify-between text-[11px] font-mono" style="color: var(--ink-3);">
-          <span>Internal · 1,200 DAU</span>
-          <span class="arrow-ext" style="color: var(--accent);">writeup →</span>
-        </div>
-      </a>
-
-    </div>
-
-    <!-- More coming -->
-    <div class="mt-14 text-center reveal">
-      <div class="font-serif-italic text-[22px]" style="color: var(--ink-3);">— more surfaces, quietly in progress —</div>
-    </div>
-
-  </div>
-</section>
-
-<div class="max-w-[1360px] mx-auto px-6 sm:px-8"><div class="rule-ink"></div></div>
-
-<!-- CONTACT -->
-<section id="contact" class="py-24 sm:py-40">
-  <div class="max-w-[1360px] mx-auto px-6 sm:px-8">
-    <div class="grid md:grid-cols-12 gap-6">
-      <div class="md:col-span-3 reveal">
-        <div class="eyebrow mb-3">§ 03 — Elsewhere</div>
+  <!-- ==================================================== PRINCIPLES / NOTES ==================================================== -->
+  <section class="section" id="notes">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">§ 01 — Notes on the practice</div>
+        <h2 class="section-title">On design systems, in <em>a few</em> sentences.</h2>
       </div>
-      <div class="md:col-span-8 md:col-start-5 reveal">
-        <h2 class="font-display text-[48px] sm:text-[88px] leading-[0.94]">
-          Say hello, or<br />
-          <span class="font-serif-italic" style="color: var(--accent);">just watch</span> quietly.
+
+      <div class="principles">
+        <div class="principle reveal">
+          <span class="num">i.</span>
+          <div>
+            <h3>A design system is not a component library.</h3>
+            <p>It is a shared language for how the product feels. Components are the sentences; tokens, motion, tone and rhythm are the grammar. If the grammar is right, the sentences write themselves.</p>
+          </div>
+        </div>
+        <div class="principle reveal">
+          <span class="num">ii.</span>
+          <div>
+            <h3>The best tokens are the ones designers stop noticing.</h3>
+            <p>A token that fits is invisible — reached for like a keyboard shortcut, not consulted like a specification. If designers still Cmd-F for hex values, the system has more work to do.</p>
+          </div>
+        </div>
+        <div class="principle reveal">
+          <span class="num">iii.</span>
+          <div>
+            <h3>Themes are first-class objects, not skins.</h3>
+            <p>Different products, moments and audiences need different rooms — same house, different rooms. Treat a theme as versioned and shippable, packaged like an npm module, not a set of overrides pasted on top.</p>
+          </div>
+        </div>
+        <div class="principle reveal">
+          <span class="num">iv.</span>
+          <div>
+            <h3>The Figma–code seam is where the system lives or dies.</h3>
+            <p>Design that can't leave Figma is a mood board. Code that can't be redrawn in Figma is a black box. The tooling that keeps the two mutually legible is not overhead — it is the system.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================== WORK ==================================================== -->
+  <section class="section" id="work">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">§ 02 — Selected work · 04 pieces</div>
+        <h2 class="section-title">Four surfaces of <em>one</em> system.</h2>
+      </div>
+
+      <div class="works">
+
+        <!-- Water Design System -->
+        <a href="https://water.devops.xiaohongshu.com/" target="_blank" rel="noopener" class="work external reveal">
+          <div class="work-meta"><span>01 · Design system</span><span>2023 —</span></div>
+          <div class="work-thumb thumb-water">
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <linearGradient id="wg1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#2D6CA8" stop-opacity="0.35"/>
+                  <stop offset="1" stop-color="#2D6CA8" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M 0 120 Q 100 95 200 115 T 400 105 L 400 225 L 0 225 Z" fill="url(#wg1)"/>
+              <path d="M 0 145 Q 100 122 200 140 T 400 130" fill="none" stroke="#2D6CA8" stroke-width="0.8" opacity="0.35"/>
+              <path d="M 0 170 Q 100 150 200 165 T 400 158" fill="none" stroke="#2D6CA8" stroke-width="0.8" opacity="0.2"/>
+              <g font-family="JetBrains Mono" font-size="8" fill="currentColor" opacity="0.7">
+                <text x="24" y="34">tokens</text>
+                <text x="24" y="48">components</text>
+                <text x="24" y="62">motion</text>
+                <text x="24" y="76">themes</text>
+                <text x="24" y="90">docs</text>
+              </g>
+              <g transform="translate(275, 26)" font-family="JetBrains Mono" font-size="7">
+                <rect x="0" y="0" width="100" height="72" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>
+                <rect x="0" y="0" width="100" height="14" fill="currentColor" opacity="0.1"/>
+                <circle cx="14" cy="34" r="4" fill="#DC5A2A"/>
+                <rect x="26" y="30" width="52" height="4" fill="currentColor" opacity="0.4"/>
+                <rect x="26" y="38" width="34" height="4" fill="currentColor" opacity="0.25"/>
+                <rect x="14" y="52" width="70" height="4" fill="currentColor" opacity="0.15"/>
+                <rect x="14" y="60" width="46" height="4" fill="currentColor" opacity="0.15"/>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <h3 class="work-title">Water<sup>™</sup></h3>
+            <p class="work-desc">The design system that binds the product surface at <span class="redact" data-secret="小红书 · RED" tabindex="0" role="button">■■■■■■</span> — tokens, mobile (ReDS) and desktop (DDS) component libraries, motion, documentation, and the ecosystem of tooling around them.</p>
+          </div>
+          <div class="work-tags">
+            <span>ReDS</span><span>DDS</span><span>iOS · Android · RN · H5 · Harmony</span>
+          </div>
+          <div class="work-cta">
+            <span>water.devops · internal</span><span class="arrow"></span>
+          </div>
+        </a>
+
+        <!-- Theme Store -->
+        <a href="https://water.devops.xiaohongshu.com/themes" target="_blank" rel="noopener" class="work external reveal">
+          <div class="work-meta"><span>02 · Theme management</span><span>2024 —</span></div>
+          <div class="work-thumb thumb-theme">
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice">
+              <g transform="translate(30, 28)">
+                <rect x="0" y="0" width="90" height="120" rx="3" fill="var(--paper-2)" stroke="var(--line-strong)" stroke-width="0.6"/>
+                <rect x="0" y="0" width="90" height="60" fill="#DC5A2A"/>
+                <circle cx="18" cy="18" r="4" fill="#FBFAF4" opacity="0.7"/>
+                <rect x="8" y="72" width="52" height="5" fill="currentColor" opacity="0.7"/>
+                <rect x="8" y="84" width="34" height="4" fill="currentColor" opacity="0.35"/>
+                <text x="8" y="106" font-family="JetBrains Mono" font-size="7" fill="currentColor" opacity="0.6">brand.candy</text>
+              </g>
+              <g transform="translate(140, 44)">
+                <rect x="0" y="0" width="90" height="120" rx="3" fill="var(--paper-2)" stroke="var(--line-strong)" stroke-width="0.6"/>
+                <rect x="0" y="0" width="90" height="60" fill="#1A4A6E"/>
+                <circle cx="18" cy="18" r="4" fill="#FBFAF4" opacity="0.7"/>
+                <rect x="8" y="72" width="52" height="5" fill="currentColor" opacity="0.7"/>
+                <rect x="8" y="84" width="34" height="4" fill="currentColor" opacity="0.35"/>
+                <text x="8" y="106" font-family="JetBrains Mono" font-size="7" fill="currentColor" opacity="0.6">deep.night</text>
+              </g>
+              <g transform="translate(250, 28)">
+                <rect x="0" y="0" width="90" height="120" rx="3" fill="var(--paper-2)" stroke="var(--line-strong)" stroke-width="0.6"/>
+                <rect x="0" y="0" width="90" height="60" fill="#3B6F3B"/>
+                <circle cx="18" cy="18" r="4" fill="#FBFAF4" opacity="0.7"/>
+                <rect x="8" y="72" width="52" height="5" fill="currentColor" opacity="0.7"/>
+                <rect x="8" y="84" width="34" height="4" fill="currentColor" opacity="0.35"/>
+                <text x="8" y="106" font-family="JetBrains Mono" font-size="7" fill="currentColor" opacity="0.6">forest.7</text>
+              </g>
+              <text x="200" y="200" font-family="JetBrains Mono" font-size="9" fill="currentColor" opacity="0.5" text-anchor="middle">figma variables → npm package · 1 minute</text>
+            </svg>
+          </div>
+          <div>
+            <h3 class="work-title">Theme Store</h3>
+            <p class="work-desc">A theme customization platform inside Water. Designers publish theme packs straight from Figma variables — one minute later, engineers <span class="font-mono" style="font-size: 0.88em; color: var(--ink);">npm install</span> them. Turns brand and business themes into first-class, versioned artifacts.</p>
+          </div>
+          <div class="work-tags">
+            <span>H5 · RN · iOS · Android · Flutter</span><span>Owned</span>
+          </div>
+          <div class="work-cta">
+            <span>water.devops/themes · internal</span><span class="arrow"></span>
+          </div>
+        </a>
+
+        <!-- Water Figma Plugin -->
+        <a href="https://www.figma.com/community/plugin/1397510659438561031/water" target="_blank" rel="noopener" class="work external reveal">
+          <div class="work-meta"><span>03 · Figma plugin</span><span>2024 —</span></div>
+          <div class="work-thumb thumb-plugin">
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice">
+              <rect x="30" y="20" width="340" height="185" rx="6" fill="var(--paper-2)" stroke="var(--line-strong)" stroke-width="0.5"/>
+              <rect x="30" y="20" width="340" height="20" rx="6 6 0 0" fill="currentColor" opacity="0.05"/>
+              <circle cx="44" cy="30" r="2.5" fill="#DC5A2A"/>
+              <circle cx="54" cy="30" r="2.5" fill="currentColor" opacity="0.25"/>
+              <circle cx="64" cy="30" r="2.5" fill="currentColor" opacity="0.25"/>
+              <text x="80" y="33" font-family="JetBrains Mono" font-size="8" fill="currentColor" opacity="0.6">Water · 一个充满魔法的小小工具箱</text>
+
+              <g transform="translate(48, 58)" font-family="JetBrains Mono" font-size="9" fill="currentColor">
+                <rect x="0" y="0" width="12" height="12" rx="2" fill="#DC5A2A"/>
+                <text x="20" y="10" opacity="0.85">Spec check</text>
+                <text x="230" y="10" opacity="0.4" font-size="8">▸ scan</text>
+
+                <rect x="0" y="24" width="12" height="12" rx="2" fill="#1A4A6E"/>
+                <text x="20" y="34" opacity="0.85">Token detection</text>
+                <text x="230" y="34" opacity="0.4" font-size="8">▸ 12 issues</text>
+
+                <rect x="0" y="48" width="12" height="12" rx="2" fill="#3B6F3B"/>
+                <text x="20" y="58" opacity="0.85">Variable source switch</text>
+                <text x="230" y="58" opacity="0.4" font-size="8">▸ 1 mode</text>
+
+                <rect x="0" y="72" width="12" height="12" rx="2" fill="#B58A2C"/>
+                <text x="20" y="82" opacity="0.85">Accessibility voiceover</text>
+                <text x="230" y="82" opacity="0.4" font-size="8">▸ WIP</text>
+
+                <rect x="0" y="96" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 2"/>
+                <text x="20" y="106" opacity="0.5">Multi-language · wip</text>
+
+                <text x="0" y="132" opacity="0.4" font-size="7">↳ dev mode: Delight D2C → code</text>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <h3 class="work-title">Water · Figma Plugin</h3>
+            <p class="work-desc">"A small magical toolbox for Figma." Design-mode: spec-check the file, detect token drift, switch variable sources, dictate accessibility captions. Dev-mode: turn a component instance into Delight code and hand it to VSCode.</p>
+          </div>
+          <div class="work-tags">
+            <span>Design + Dev mode</span><span>AI D2C</span><span>Public</span>
+          </div>
+          <div class="work-cta">
+            <span>figma.com/community · public</span><span class="arrow"></span>
+          </div>
+        </a>
+
+        <!-- Water Ecosystem -->
+        <a href="#" class="work internal reveal">
+          <div class="work-meta"><span>04 · Ecosystem</span><span>2023 —</span></div>
+          <div class="work-thumb thumb-ecosystem">
+            <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice">
+              <!-- Center: Water -->
+              <g transform="translate(200, 112)">
+                <circle r="34" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
+                <text y="4" text-anchor="middle" font-family="Space Grotesk" font-size="16" fill="currentColor" font-weight="500">Water</text>
+                <text y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="currentColor" opacity="0.6">design system</text>
+              </g>
+              <!-- Orbiting: Bridge, Part, Ocean, Ditto, Robin -->
+              <g font-family="JetBrains Mono" font-size="8" fill="currentColor">
+                <g transform="translate(70, 60)">
+                  <circle r="22" fill="none" stroke="#DC5A2A" stroke-width="0.6" opacity="0.5"/>
+                  <text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="11" font-weight="500">BRIDGE</text>
+                  <text y="10" text-anchor="middle" font-size="6" opacity="0.6">visual assets</text>
+                </g>
+                <g transform="translate(340, 60)">
+                  <circle r="22" fill="none" stroke="#1A4A6E" stroke-width="0.6" opacity="0.5"/>
+                  <text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="11" font-weight="500">PART</text>
+                  <text y="10" text-anchor="middle" font-size="6" opacity="0.6">business</text>
+                </g>
+                <g transform="translate(60, 175)">
+                  <circle r="22" fill="none" stroke="#3B6F3B" stroke-width="0.6" opacity="0.5"/>
+                  <text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="11" font-weight="500">OCEAN</text>
+                  <text y="10" text-anchor="middle" font-size="6" opacity="0.6">i18n · copy</text>
+                </g>
+                <g transform="translate(340, 175)">
+                  <circle r="22" fill="none" stroke="#B58A2C" stroke-width="0.6" opacity="0.5"/>
+                  <text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="11" font-weight="500">DITTO</text>
+                  <text y="10" text-anchor="middle" font-size="6" opacity="0.6">page builder</text>
+                </g>
+                <g transform="translate(200, 32)">
+                  <circle r="20" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>
+                  <text y="0" text-anchor="middle" font-family="Space Grotesk" font-size="10" font-weight="500">ROBIN</text>
+                  <text y="9" text-anchor="middle" font-size="6" opacity="0.6">NPS</text>
+                </g>
+              </g>
+              <!-- Connection lines -->
+              <g stroke="currentColor" stroke-width="0.3" opacity="0.25" fill="none">
+                <line x1="200" y1="112" x2="70" y2="60"/>
+                <line x1="200" y1="112" x2="340" y2="60"/>
+                <line x1="200" y1="112" x2="60" y2="175"/>
+                <line x1="200" y1="112" x2="340" y2="175"/>
+                <line x1="200" y1="112" x2="200" y2="32"/>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <h3 class="work-title">Water Ecosystem</h3>
+            <p class="work-desc">Around Water sit five sibling platforms — Bridge (visual assets), Part (business components), Ocean (multi-language &amp; copy), Ditto (page builder), Robin (NPS). Each speaks the same Water vocabulary from a different corner of the product.</p>
+          </div>
+          <div class="work-tags">
+            <span>Bridge</span><span>Part</span><span>Ocean</span><span>Ditto</span><span>Robin</span>
+          </div>
+          <div class="work-cta">
+            <span>writeup · in progress</span><span class="arrow"></span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================== LETTER GRID ==================================================== -->
+  <section class="letter-grid" id="letter-grid">
+    <div class="row" data-line="1">
+      <span class="char">B</span>
+      <span class="char">U</span>
+      <span class="char">I</span>
+      <span class="char">L</span>
+      <span class="char">T</span>
+      <span class="char space">&nbsp;</span>
+      <span class="char">A</span>
+      <span class="char">T</span>
+    </div>
+    <div class="row italic" data-line="2">
+      <span class="char italic">t</span>
+      <span class="char italic">h</span>
+      <span class="char italic">e</span>
+      <span class="char space">&nbsp;</span>
+      <span class="char italic">s</span>
+      <span class="char italic">e</span>
+      <span class="char italic">a</span>
+      <span class="char italic">m</span>
+      <span class="char italic">.</span>
+    </div>
+  </section>
+
+  <!-- ==================================================== CONTACT ==================================================== -->
+  <section class="contact" id="contact">
+    <div class="container">
+      <div class="reveal">
+        <h2>
+          Let's build<br />
+          <em>the seam</em>.
         </h2>
-        <p class="mt-8 text-[15.5px] leading-[1.7] max-w-[540px]" style="color: var(--ink-2);">
-          Both are welcome. If you're working on a design system, tooling for designers, or something at the AI-native seam — I'd like to read what you're making. I keep the same handle everywhere below.
-        </p>
-
-        <div class="mt-10 grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-[560px]">
-          <a href="https://github.com/justquanyin" class="font-mono text-[12px] px-4 py-3 border flex items-center justify-between hover:border-[color:var(--ink)] transition-colors" style="border-color: var(--line); color: var(--ink);">
-            GitHub <span style="color: var(--accent);">↗</span>
+        <div class="contact-links">
+          <a href="https://github.com/justquanyin" target="_blank" rel="noopener" class="contact-link">
+            GitHub <span class="ico">↗</span>
           </a>
-          <a href="#" class="font-mono text-[12px] px-4 py-3 border flex items-center justify-between hover:border-[color:var(--ink)] transition-colors" style="border-color: var(--line); color: var(--ink);">
-            X / Twitter <span style="color: var(--accent);">↗</span>
+          <a href="https://www.figma.com/community/plugin/1397510659438561031/water" target="_blank" rel="noopener" class="contact-link">
+            Water on Figma <span class="ico">↗</span>
           </a>
-          <a href="#" class="font-mono text-[12px] px-4 py-3 border flex items-center justify-between hover:border-[color:var(--ink)] transition-colors" style="border-color: var(--line); color: var(--ink);">
-            Figma <span style="color: var(--accent);">↗</span>
+          <a href="#" class="contact-link">
+            X / Twitter <span class="ico">↗</span>
           </a>
-          <a href="#" class="font-mono text-[12px] px-4 py-3 border flex items-center justify-between hover:border-[color:var(--ink)] transition-colors" style="border-color: var(--line); color: var(--ink);">
-            Are.na <span style="color: var(--accent);">↗</span>
+          <a href="#" class="contact-link">
+            Read.cv <span class="ico">↗</span>
           </a>
-          <a href="#" class="font-mono text-[12px] px-4 py-3 border flex items-center justify-between hover:border-[color:var(--ink)] transition-colors" style="border-color: var(--line); color: var(--ink);">
-            Read.cv <span style="color: var(--accent);">↗</span>
+          <a href="#" class="contact-link">
+            Are.na <span class="ico">↗</span>
           </a>
-          <a href="#" class="font-mono text-[12px] px-4 py-3 border flex items-center justify-between hover:border-[color:var(--ink)] transition-colors" style="border-color: var(--line); color: var(--ink);">
-            Dribbble <span style="color: var(--accent);">↗</span>
-          </a>
+        </div>
+        <div style="margin-top: 40px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);">
+          © 2026 Quan Yin · Design × Engineering
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- FOOTER -->
-<footer style="border-top: 1px solid var(--ink); opacity: .55;">
-  <div class="max-w-[1360px] mx-auto px-6 sm:px-8 py-6 font-mono text-[11px] flex flex-col sm:flex-row items-center justify-between gap-2" style="color: var(--ink-2);">
-    <span>© 2026 QUAN YIN</span>
-    <span id="footer-coords">0000 X 0000 Y · GMT+8</span>
-  </div>
-</footer>
+</main>
 
 <script>
-  // Theme toggle
+  // ============================================================
+  // THEME toggle (3-state: system / light / dark)
+  // ============================================================
   const html = document.documentElement;
-  const letter = document.getElementById('theme-letter');
-  document.getElementById('theme-toggle').addEventListener('click', () => {
-    const now = html.getAttribute('data-theme');
-    const next = now === 'A' ? 'B' : 'A';
-    html.setAttribute('data-theme', next);
-    letter.textContent = next;
-    try { localStorage.setItem('qy-theme', next); } catch(e) {}
-  });
+  const themeStates = ['system', 'light', 'dark'];
+  const themeState = document.getElementById('theme-state');
+
+  function setTheme(t) {
+    html.classList.remove('system', 'light', 'dark');
+    html.classList.add(t);
+    themeState.textContent = t;
+    try { localStorage.setItem('qy-theme', t); } catch(e) {}
+  }
   try {
     const saved = localStorage.getItem('qy-theme');
-    if (saved === 'B') {
-      html.setAttribute('data-theme', 'B');
-      letter.textContent = 'B';
-    }
+    if (saved && themeStates.includes(saved)) setTheme(saved);
   } catch(e) {}
 
-  // Clock (updates every second, GMT+8)
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const now = themeStates.find(t => html.classList.contains(t)) || 'light';
+    const next = themeStates[(themeStates.indexOf(now) + 1) % themeStates.length];
+    setTheme(next);
+  });
+
+  // ============================================================
+  // SOUND toggle (visual state only for now — no audio)
+  // ============================================================
+  const soundState = document.getElementById('sound-state');
+  let soundOn = false;
+  document.getElementById('sound-toggle').addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundState.textContent = soundOn ? '▶' : '|';
+  });
+
+  // ============================================================
+  // CLOCK — HH:MM:SS GMT+8
+  // ============================================================
   const clockEl = document.getElementById('hud-clock');
+  const weekEl  = document.getElementById('hud-week');
   function tick() {
     const d = new Date();
-    // Adjust to GMT+8
     const utc = d.getTime() + d.getTimezoneOffset() * 60000;
-    const gmt8 = new Date(utc + 8 * 3600000);
-    const hh = String(gmt8.getHours()).padStart(2, '0');
-    const mm = String(gmt8.getMinutes()).padStart(2, '0');
-    const ss = String(gmt8.getSeconds()).padStart(2, '0');
-    if (clockEl) clockEl.firstElementChild.textContent = `${hh}:${mm}:${ss} GMT+8 CN`;
+    const g = new Date(utc + 8 * 3600000);
+    const hh = String(g.getHours()).padStart(2, '0');
+    const mm = String(g.getMinutes()).padStart(2, '0');
+    const ss = String(g.getSeconds()).padStart(2, '0');
+    if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss} GMT+8`;
+    // ISO week number
+    const target = new Date(Date.UTC(g.getFullYear(), g.getMonth(), g.getDate()));
+    const day = target.getUTCDay() || 7;
+    target.setUTCDate(target.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+    const week = Math.ceil(((target - yearStart) / 86400000 + 1) / 7);
+    if (weekEl) weekEl.textContent = `Week ${String(week).padStart(2, '0')}/52`;
   }
   tick(); setInterval(tick, 1000);
 
-  // Cursor coordinates
+  // ============================================================
+  // CURSOR coordinates
+  // ============================================================
   const coordsEl = document.getElementById('hud-coords');
-  const footerCoords = document.getElementById('footer-coords');
   window.addEventListener('pointermove', (e) => {
     const x = String(Math.round(e.clientX)).padStart(4, '0');
     const y = String(Math.round(e.clientY)).padStart(4, '0');
-    if (coordsEl) coordsEl.firstElementChild.textContent = `${x} X ${y} Y`;
-    if (footerCoords) footerCoords.textContent = `${x} X ${y} Y · GMT+8`;
+    if (coordsEl) coordsEl.textContent = `${x} X ${y} Y`;
   });
 
-  // Scroll reveal
+  // ============================================================
+  // REDACTION passcode reveal
+  // ============================================================
+  const PASSCODE = 'xhs';
+  document.querySelectorAll('.redact').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      if (el.classList.contains('revealed') || el.querySelector('input')) return;
+      const secret = el.getAttribute('data-secret') || 'REVEAL';
+      const input = document.createElement('input');
+      input.className = 'passcode-input';
+      input.type = 'text';
+      input.spellcheck = false;
+      input.autocomplete = 'off';
+      input.placeholder = 'passcode';
+      input.setAttribute('aria-label', 'Enter passcode to reveal');
+      el.innerHTML = '';
+      el.appendChild(input);
+      el.style.background = 'transparent';
+      el.style.padding = '0';
+      input.focus();
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          if (input.value.trim().toLowerCase() === PASSCODE) {
+            // reveal ALL redactions with same secret
+            document.querySelectorAll('.redact[data-secret]').forEach((r) => {
+              if (r.getAttribute('data-secret') === secret) {
+                r.classList.add('revealed');
+                r.innerHTML = secret;
+                r.style.background = '';
+                r.style.padding = '';
+              }
+            });
+          } else {
+            input.classList.add('wrong');
+            input.value = '';
+            setTimeout(() => input.classList.remove('wrong'), 400);
+          }
+        } else if (ev.key === 'Escape') {
+          el.innerHTML = '■■■■■■';
+          el.style.background = '';
+          el.style.padding = '';
+        }
+      });
+      input.addEventListener('blur', () => {
+        if (!el.classList.contains('revealed')) {
+          el.innerHTML = '■■■■■■';
+          el.style.background = '';
+          el.style.padding = '';
+        }
+      });
+    });
+    el.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !el.classList.contains('revealed')) {
+        e.preventDefault();
+        el.click();
+      }
+    });
+  });
+
+  // ============================================================
+  // SCROLL REVEAL
+  // ============================================================
   const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ============================================================
+  // LETTER GRID stagger reveal on scroll
+  // ============================================================
+  const grid = document.getElementById('letter-grid');
+  if (grid) {
+    const chars = grid.querySelectorAll('.char');
+    chars.forEach((c, i) => {
+      c.style.transitionDelay = `${i * 0.05}s`;
+    });
+    const gio = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { grid.classList.add('in'); gio.unobserve(grid); }
+      });
+    }, { threshold: 0.3 });
+    gio.observe(grid);
+  }
 </script>
 </body>
 </html>
