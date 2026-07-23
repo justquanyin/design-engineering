@@ -241,48 +241,12 @@
     letter-spacing: -0.02em;
     line-height: 0.85;
     vertical-align: middle;
-    cursor: pointer;
     transition: background .3s;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7em;
     user-select: none;
   }
   .redact::selection { background: var(--redact); color: transparent; }
-  .redact.revealed {
-    background: transparent;
-    color: var(--ink);
-    padding: 0;
-    letter-spacing: normal;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    cursor: default;
-    user-select: text;
-  }
-  .redact.revealed::selection { background: var(--accent); color: var(--paper); }
-  .passcode-input {
-    display: inline-block;
-    background: var(--paper-2);
-    border: 1px solid var(--line-strong);
-    padding: 2px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7em;
-    color: var(--ink);
-    letter-spacing: 0.1em;
-    outline: none;
-    width: 100px;
-    border-radius: 2px;
-    animation: shake-ready .3s;
-  }
-  .passcode-input.wrong { animation: shake .3s; border-color: var(--accent); }
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20% { transform: translateX(-4px); }
-    40% { transform: translateX(4px); }
-    60% { transform: translateX(-3px); }
-    80% { transform: translateX(3px); }
-  }
-  @keyframes shake-ready { from { opacity: 0; } to { opacity: 1; } }
 
   /* ================================================== SECTION HEADS ================================================== */
 
@@ -605,7 +569,6 @@
       <a href="#work" class="hud-link hud-hide-sm">Work</a>
       <a href="#contact" class="hud-link hud-hide-sm">Contact</a>
       <button class="hud-btn" id="theme-toggle" aria-label="Toggle theme">Theme:<span id="theme-state">system</span></button>
-      <button class="hud-btn hud-hide-sm" id="sound-toggle" aria-label="Toggle ambient sound">Sound[<span id="sound-state">|</span>]</button>
     </div>
   </div>
   <!-- Bottom row -->
@@ -642,14 +605,14 @@
             Hi — I'm <span style="color: var(--ink);">Quan Yin</span> (景言). I sit at the seam of <span class="font-serif-italic">design engineering</span> and <span class="font-serif-italic">AI-native tooling</span> — where a design system stops being a document and starts running through the pipeline.
           </p>
           <p>
-            At <span class="redact" data-secret="小红书 · RED" tabindex="0" role="button" aria-label="Employer name — protected. Click to enter passcode.">■■■■■■</span>, I own <span style="color: var(--ink);">Theme Store</span> and the <span style="color: var(--ink);">Water Figma Plugin</span>. Both live inside Water — our design system — and try to make its invisible layer pleasant to touch.
+            At <span class="redact">■■■■■■</span>, I own <span style="color: var(--ink);">Theme Store</span> and the <span style="color: var(--ink);">Water Figma Plugin</span>. Both live inside Water — our design system — and try to make its invisible layer pleasant to touch.
           </p>
         </div>
         <div class="bio-meta rise rise-4">
           <div class="row"><span>Practice</span><span class="val">Design × Engineering</span></div>
           <div class="row"><span>Focus</span><span class="val">Design system · AI-native tooling</span></div>
           <div class="row"><span>Owns</span><span class="val">Theme Store · Water Figma Plugin</span></div>
-          <div class="row"><span>At</span><span class="val"><span class="redact" data-secret="小红书 · RED" tabindex="0" role="button">■■■■■■</span></span></div>
+          <div class="row"><span>At</span><span class="val"><span class="redact">■■■■■■</span></span></div>
           <div class="row"><span>State</span><span class="val" style="color: var(--accent);">Making</span></div>
         </div>
       </div>
@@ -756,7 +719,7 @@
           </div>
           <div>
             <h3 class="work-title">Water<sup>™</sup></h3>
-            <p class="work-desc">The design system that binds the product surface at <span class="redact" data-secret="小红书 · RED" tabindex="0" role="button">■■■■■■</span> — tokens, mobile (ReDS) and desktop (DDS) component libraries, motion, documentation, and the ecosystem of tooling around them.</p>
+            <p class="work-desc">The design system that binds the product surface at <span class="redact">■■■■■■</span> — tokens, mobile (ReDS) and desktop (DDS) component libraries, motion, documentation, and the ecosystem of tooling around them.</p>
           </div>
           <div class="work-tags">
             <span>ReDS</span><span>DDS</span><span>iOS · Android · RN · H5 · Harmony</span>
@@ -963,15 +926,6 @@
           <a href="https://www.figma.com/community/plugin/1397510659438561031/water" target="_blank" rel="noopener" class="contact-link">
             Water on Figma <span class="ico">↗</span>
           </a>
-          <a href="#" class="contact-link">
-            X / Twitter <span class="ico">↗</span>
-          </a>
-          <a href="#" class="contact-link">
-            Read.cv <span class="ico">↗</span>
-          </a>
-          <a href="#" class="contact-link">
-            Are.na <span class="ico">↗</span>
-          </a>
         </div>
         <div style="margin-top: 40px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);">
           © 2026 Quan Yin · Design × Engineering
@@ -1008,16 +962,6 @@
   });
 
   // ============================================================
-  // SOUND toggle (visual state only for now — no audio)
-  // ============================================================
-  const soundState = document.getElementById('sound-state');
-  let soundOn = false;
-  document.getElementById('sound-toggle').addEventListener('click', () => {
-    soundOn = !soundOn;
-    soundState.textContent = soundOn ? '▶' : '|';
-  });
-
-  // ============================================================
   // CLOCK — HH:MM:SS GMT+8
   // ============================================================
   const clockEl = document.getElementById('hud-clock');
@@ -1048,65 +992,6 @@
     const x = String(Math.round(e.clientX)).padStart(4, '0');
     const y = String(Math.round(e.clientY)).padStart(4, '0');
     if (coordsEl) coordsEl.textContent = `${x} X ${y} Y`;
-  });
-
-  // ============================================================
-  // REDACTION passcode reveal
-  // ============================================================
-  const PASSCODE = 'xhs';
-  document.querySelectorAll('.redact').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      if (el.classList.contains('revealed') || el.querySelector('input')) return;
-      const secret = el.getAttribute('data-secret') || 'REVEAL';
-      const input = document.createElement('input');
-      input.className = 'passcode-input';
-      input.type = 'text';
-      input.spellcheck = false;
-      input.autocomplete = 'off';
-      input.placeholder = 'passcode';
-      input.setAttribute('aria-label', 'Enter passcode to reveal');
-      el.innerHTML = '';
-      el.appendChild(input);
-      el.style.background = 'transparent';
-      el.style.padding = '0';
-      input.focus();
-      input.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter') {
-          if (input.value.trim().toLowerCase() === PASSCODE) {
-            // reveal ALL redactions with same secret
-            document.querySelectorAll('.redact[data-secret]').forEach((r) => {
-              if (r.getAttribute('data-secret') === secret) {
-                r.classList.add('revealed');
-                r.innerHTML = secret;
-                r.style.background = '';
-                r.style.padding = '';
-              }
-            });
-          } else {
-            input.classList.add('wrong');
-            input.value = '';
-            setTimeout(() => input.classList.remove('wrong'), 400);
-          }
-        } else if (ev.key === 'Escape') {
-          el.innerHTML = '■■■■■■';
-          el.style.background = '';
-          el.style.padding = '';
-        }
-      });
-      input.addEventListener('blur', () => {
-        if (!el.classList.contains('revealed')) {
-          el.innerHTML = '■■■■■■';
-          el.style.background = '';
-          el.style.padding = '';
-        }
-      });
-    });
-    el.addEventListener('keydown', (e) => {
-      if ((e.key === 'Enter' || e.key === ' ') && !el.classList.contains('revealed')) {
-        e.preventDefault();
-        el.click();
-      }
-    });
   });
 
   // ============================================================
