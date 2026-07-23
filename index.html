@@ -201,6 +201,9 @@
   .figure { padding: 8px; }
   .figure-frame { width: 100%; background: var(--bg-elevated); position: relative; overflow: hidden; border: 1px solid var(--line); }
   .figure-frame svg { display: block; width: 100%; height: 100%; }
+  .figure-frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .figure.stack { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  @media (min-width: 640px) { .figure.stack.two { grid-template-columns: 1fr 1fr; } }
   .figure-tag {
     position: absolute; top: 0; right: 0; z-index: 10; background: var(--selection); color: #0A0A0A;
     padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
@@ -431,25 +434,18 @@
       <div class="chapter-num reveal">01</div>
       <div class="chapter-main">
         <div class="figure reveal">
-          <div class="figure-frame" style="aspect-ratio:1332/560;">
+          <div class="figure-frame" style="aspect-ratio:16/9;">
             <span class="figure-tag">Design system</span>
-            <svg viewBox="0 0 1332 560" preserveAspectRatio="xMidYMid slice">
-              <defs><linearGradient id="wg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2D6CA8" stop-opacity="0.3"/><stop offset="1" stop-color="#2D6CA8" stop-opacity="0"/></linearGradient></defs>
-              <path d="M 0 300 Q 333 230 666 285 T 1332 250 L 1332 560 L 0 560 Z" fill="url(#wg1)"/>
-              <path d="M 0 360 Q 333 305 666 348 T 1332 325" fill="none" stroke="#2D6CA8" stroke-width="1.2" opacity="0.35"/>
-              <path d="M 0 430 Q 333 385 666 418 T 1332 400" fill="none" stroke="#2D6CA8" stroke-width="1.2" opacity="0.2"/>
-              <g font-family="JetBrains Mono" font-size="19" fill="currentColor" opacity="0.7">
-                <text x="80" y="96">tokens</text><text x="80" y="124">components</text><text x="80" y="152">motion</text><text x="80" y="180">themes</text><text x="80" y="208">docs</text>
-              </g>
-              <g transform="translate(940,72)" font-family="JetBrains Mono" font-size="16">
-                <rect x="0" y="0" width="300" height="200" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-                <rect x="0" y="0" width="300" height="40" fill="currentColor" opacity="0.1"/>
-                <circle cx="40" cy="96" r="11" fill="#DC5A2A"/><rect x="72" y="86" width="150" height="10" fill="currentColor" opacity="0.4"/><rect x="72" y="102" width="100" height="10" fill="currentColor" opacity="0.25"/>
-                <rect x="38" y="144" width="220" height="10" fill="currentColor" opacity="0.15"/><rect x="38" y="164" width="140" height="10" fill="currentColor" opacity="0.15"/>
-              </g>
-            </svg>
+            <img src="assets/cap-water-home.jpg" alt="Water design system — home screen" loading="lazy" />
           </div>
-          <div class="figure-cap"><span class="name">Water<em class="serif" style="font-size:.7em">™</em> — tokens, components, motion, themes, docs</span><span>internal</span></div>
+          <div class="figure-cap"><span class="name">Water<em class="serif" style="font-size:.7em">™</em> — the system homepage</span><span>internal</span></div>
+        </div>
+        <div class="figure reveal">
+          <div class="figure-frame" style="aspect-ratio:16/9;">
+            <span class="figure-tag">All in one</span>
+            <img src="assets/cap-water-assets.png" alt="Water — asset libraries overview" loading="lazy" />
+          </div>
+          <div class="figure-cap"><span class="name">One system, many libraries — ReDS · DDS · Charts · assets</span><span>internal</span></div>
         </div>
         <h3>One system, <em>two</em> libraries.</h3>
         <p>Water carries a single language across two component libraries — <strong style="color:var(--label-1);font-weight:500">ReDS</strong> for mobile and <strong style="color:var(--label-1);font-weight:500">DDS</strong> for desktop — sharing tokens, motion, and tone underneath. A product picks its library and theme, and starts designing inside the same order everyone else works in.</p>
@@ -468,16 +464,11 @@
       <div class="chapter-num reveal">02</div>
       <div class="chapter-main">
         <div class="figure reveal">
-          <div class="figure-frame" style="aspect-ratio:1332/750;">
+          <div class="figure-frame" style="aspect-ratio:16/9;">
             <span class="figure-tag">Theme management</span>
-            <svg viewBox="0 0 1332 750" preserveAspectRatio="xMidYMid slice">
-              <g transform="translate(120,140)"><rect width="300" height="440" rx="14" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/><rect width="300" height="210" fill="#DC5A2A"/><circle cx="62" cy="62" r="17" fill="var(--bg-elevated)" opacity="0.9"/><rect x="26" y="248" width="180" height="18" fill="currentColor" opacity="0.7"/><rect x="26" y="282" width="116" height="13" fill="currentColor" opacity="0.35"/><text x="26" y="380" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.6">brand.candy</text></g>
-              <g transform="translate(516,190)"><rect width="300" height="440" rx="14" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/><rect width="300" height="210" fill="#1A4A6E"/><circle cx="62" cy="62" r="17" fill="var(--bg-elevated)" opacity="0.9"/><rect x="26" y="248" width="180" height="18" fill="currentColor" opacity="0.7"/><rect x="26" y="282" width="116" height="13" fill="currentColor" opacity="0.35"/><text x="26" y="380" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.6">deep.night</text></g>
-              <g transform="translate(912,140)"><rect width="300" height="440" rx="14" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/><rect width="300" height="210" fill="#3B6F3B"/><circle cx="62" cy="62" r="17" fill="var(--bg-elevated)" opacity="0.9"/><rect x="26" y="248" width="180" height="18" fill="currentColor" opacity="0.7"/><rect x="26" y="282" width="116" height="13" fill="currentColor" opacity="0.35"/><text x="26" y="380" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.6">forest.7</text></g>
-              <text x="666" y="690" font-family="JetBrains Mono" font-size="21" fill="currentColor" opacity="0.5" text-anchor="middle">figma variables → npm package · ~1 minute</text>
-            </svg>
+            <img src="assets/cap-themes.png" alt="Theme Store — theme catalog" loading="lazy" />
           </div>
-          <div class="figure-cap"><span class="name">Theme Store — owned end to end</span><span>internal</span></div>
+          <div class="figure-cap"><span class="name">Theme Store — the theme catalog, owned end to end</span><span>internal</span></div>
         </div>
         <h3>Themes shipped like <em>packages</em>.</h3>
         <p>Theme Store is the surface I own end to end — a platform that turns a color exploration into shippable code. A designer builds a theme from Figma variables; Theme Store loads the file, previews the token list, and publishes a versioned pack. About a minute later, an engineer installs it.</p>
