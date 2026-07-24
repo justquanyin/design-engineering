@@ -490,25 +490,29 @@
       <div class="chapter-num reveal">03</div>
       <div class="chapter-main">
         <div class="figure reveal">
-          <div class="figure-frame" style="aspect-ratio:1332/750;">
+          <div class="figure-frame" style="aspect-ratio:2000/1276;">
             <span class="figure-tag">Figma plugin</span>
-            <svg viewBox="0 0 1332 750" preserveAspectRatio="xMidYMid slice">
-              <rect x="110" y="70" width="1112" height="610" rx="20" fill="var(--bg-elevated)" stroke="var(--label-3)" stroke-width="2"/>
-              <rect x="110" y="70" width="1112" height="60" fill="currentColor" opacity="0.06"/>
-              <circle cx="158" cy="100" r="9" fill="#DC5A2A"/><circle cx="186" cy="100" r="9" fill="currentColor" opacity="0.25"/><circle cx="214" cy="100" r="9" fill="currentColor" opacity="0.25"/>
-              <text x="250" y="107" font-family="JetBrains Mono" font-size="20" fill="currentColor" opacity="0.7">Water · 一个充满魔法的小小工具箱</text>
-              <g transform="translate(170,190)" font-family="JetBrains Mono" font-size="22" fill="currentColor">
-                <rect x="0" y="0" width="40" height="40" rx="7" fill="#DC5A2A"/><text x="62" y="30" opacity="0.85">Spec check</text><text x="760" y="30" opacity="0.4">▸ scan</text>
-                <rect x="0" y="78" width="40" height="40" rx="7" fill="#1A4A6E"/><text x="62" y="108" opacity="0.85">Token detection</text><text x="760" y="108" opacity="0.4">▸ 12 issues</text>
-                <rect x="0" y="156" width="40" height="40" rx="7" fill="#3B6F3B"/><text x="62" y="186" opacity="0.85">Variable source switch</text><text x="760" y="186" opacity="0.4">▸ 1 mode</text>
-                <rect x="0" y="234" width="40" height="40" rx="7" fill="#B58A2C"/><text x="62" y="264" opacity="0.85">Accessibility voiceover</text><text x="760" y="264" opacity="0.4">▸ WIP</text>
-                <rect x="0" y="312" width="40" height="40" rx="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 6"/><text x="62" y="342" opacity="0.5">Multi-language · wip</text>
-                <text x="0" y="424" opacity="0.4" font-size="17">↳ dev mode: Delight D2C → code</text>
-              </g>
-            </svg>
+            <img src="assets/plugin/plugin-spec.png" alt="Water plugin — spec check panel scanning a design file" loading="lazy" />
           </div>
-          <div class="figure-cap"><span class="name">Water · Figma Plugin</span><span>internal</span></div>
+          <div class="figure-cap"><span class="name">Water · Figma Plugin — design-spec check</span><span>internal</span></div>
         </div>
+        <div class="figure stack two reveal">
+          <div>
+            <div class="figure-frame" style="aspect-ratio:2000/1090;"><span class="figure-tag">Token detection</span><img src="assets/plugin/plugin-token.png" alt="Token detection — stale / unbound / missing variables" loading="lazy" /></div>
+          </div>
+          <div>
+            <div class="figure-frame" style="aspect-ratio:2000/961;"><span class="figure-tag">Variable switch</span><img src="assets/plugin/plugin-varswitch.png" alt="Variable source switch — rebind to a brand theme" loading="lazy" /></div>
+          </div>
+        </div>
+        <div class="figure stack two reveal">
+          <div>
+            <div class="figure-frame" style="aspect-ratio:2000/1363;"><span class="figure-tag">Accessibility</span><img src="assets/plugin/plugin-a11y.png" alt="Accessibility voiceover — VoiceOver label / value / trait / hint" loading="lazy" /></div>
+          </div>
+          <div>
+            <div class="figure-frame" style="aspect-ratio:1924/1338;"><span class="figure-tag">Dev mode · D2C</span><img src="assets/plugin/plugin-d2c.png" alt="Dev mode — component instance to Delight code" loading="lazy" /></div>
+          </div>
+        </div>
+        <div class="figure-cap" style="margin-bottom:24px;"><span class="name">"A small magical toolbox for Figma" — five capabilities across design &amp; dev mode</span><span>internal</span></div>
         <h3>The seam, in <em>one</em> keystroke.</h3>
         <p>"A small magical toolbox for Figma." The plugin keeps design and code mutually legible — it checks a file against the system, heals token drift, swaps variable sources for theming, records accessibility captions, and in dev-mode turns a component instance into Delight code the engineer can paste into VSCode. It's the layer that feeds AI-assisted D2C clean, spec-conformant input.</p>
         <div class="capability-list">
