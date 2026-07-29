@@ -381,34 +381,17 @@
   .atmos .s2 { width: 38vw; height: 38vw; right: -6vw; top: 24vh; background: radial-gradient(circle, #2D6CA8, transparent 68%); opacity: .18; }
   .atmos .s3 { width: 40vw; height: 40vw; left: 18vw; bottom: -12vw; background: radial-gradient(circle, #3B6F3B, transparent 70%); opacity: .14; }
 
-  /* ═══════════════════════════════════════════════ FALLING TOKENS (continuous drop) ═══════════════════════════════════════════════ */
-  .rain { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-  .token {
-    position: absolute; top: 0; left: 0; will-change: transform;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em;
-    padding: 4px 10px; border-radius: 999px;
-    border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 72%, transparent);
-    color: var(--label-2); white-space: nowrap;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .token i { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); font-style: normal; }
-  .token.blue i { background: #2D6CA8; }
-  .token.green i { background: #3B6F3B; }
-  .token.gold i { background: #B58A2C; }
+  /* ═══════════════════════════════════════════════ HYPERSPACE WARP (time-travel on scroll) ═══════════════════════════════════════════════ */
+  .warp-dark { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: #05060A; opacity: 0; will-change: opacity; }
+  #warp { position: fixed; inset: 0; z-index: 3; pointer-events: none; width: 100%; height: 100%; opacity: 0; will-change: opacity; }
 
-  /* ═══════════════════════════════════════════════ CURSOR BLUR LENS (frosted glass on hover) ═══════════════════════════════════════════════ */
-  .lens {
-    position: fixed; top: 0; left: 0; z-index: 46; pointer-events: none;
-    width: 190px; height: 190px; margin: -95px 0 0 -95px; border-radius: 999px;
-    opacity: 0; will-change: transform; transition: opacity .45s var(--cubic-66), width .4s var(--cubic-66), height .4s var(--cubic-66), margin .4s var(--cubic-66);
-    backdrop-filter: blur(7px) saturate(1.15);
-    -webkit-backdrop-filter: blur(7px) saturate(1.15);
-    -webkit-mask: radial-gradient(circle, #000 46%, rgba(0,0,0,.35) 66%, transparent 74%);
-    mask: radial-gradient(circle, #000 46%, rgba(0,0,0,.35) 66%, transparent 74%);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--label-1) 12%, transparent);
-  }
-  .lens.big { width: 240px; height: 240px; margin: -120px 0 0 -120px; }
-  @media (hover: none), (pointer: coarse) { .lens, .rain { display: none; } }
+  /* ═══════════════════════════════════════════════ MOUSE TRAIL ═══════════════════════════════════════════════ */
+  #trail { position: fixed; inset: 0; z-index: 47; pointer-events: none; width: 100%; height: 100%; }
+  @media (hover: none), (pointer: coarse) { #trail { display: none; } }
+
+  /* ═══════════════════════════════════════════════ CURL / DRUM SCROLL ═══════════════════════════════════════════════ */
+  .curl { will-change: transform, opacity; transform-style: preserve-3d; backface-visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) { .curl { transform: none !important; } }
 </style>
 </head>
 <body>
@@ -438,11 +421,12 @@
 <!-- Halftone dot-matrix background -->
 <canvas id="dots" aria-hidden="true"></canvas>
 
-<!-- Continuously falling design tokens -->
-<div class="rain" id="rain" aria-hidden="true"></div>
+<!-- Hyperspace warp: dark veil + radial streaks, driven by scroll velocity -->
+<div class="warp-dark" id="warp-dark" aria-hidden="true"></div>
+<canvas id="warp" aria-hidden="true"></canvas>
 
-<!-- Cursor blur lens (frosted glass on hover) -->
-<div class="lens" id="lens" aria-hidden="true"></div>
+<!-- Mouse trail -->
+<canvas id="trail" aria-hidden="true"></canvas>
 
 <!-- Blueprint grid overlay -->
 <div class="grid-overlay" aria-hidden="true">
@@ -802,12 +786,21 @@
   const pinWords = [document.getElementById('pin-1'), document.getElementById('pin-2'), document.getElementById('pin-3')];
   const gridOverlay = document.querySelector('.grid-overlay svg');
   const badgeRot = document.querySelector('.badge-rot');
+  // Tag content blocks that should curl like a drum on scroll (skip sticky-bearing wrappers)
+  const curlEls = prefersReduced ? [] : Array.from(document.querySelectorAll(
+    '.hero-grid, .section-head, .chapter-main, .principles, .meta-table, .prose, .contact-grid, .pin-sticky'
+  ));
+  curlEls.forEach(el => el.classList.add('curl'));
+  const CURL_MAX = 8; // degrees
   let curScrollY = 0, lastScrollY = 0, scrollVel = 0;
+  let warpBoost = 0; // 0..1 hyperspace intensity, spiked by scroll velocity, decays in warp loop
   function onScroll() {
     const y = window.scrollY;
     scrollVel = y - lastScrollY;
     lastScrollY = y;
     curScrollY = y;
+    // feed the hyperspace warp with scroll velocity (spike, decays in warp loop)
+    warpBoost = Math.min(1, Math.max(warpBoost, Math.abs(scrollVel) / 46));
     // indicator
     if (scrollFill) {
       const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -836,6 +829,22 @@
   onScroll();
   window.addEventListener('resize', onScroll, { passive: true });
   if (!lenis) window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Curl/drum: rotateX each content block by its distance from viewport center — runs every frame for smoothness
+  (function curlLoop() {
+    if (curlEls.length) {
+      const vh = window.innerHeight;
+      for (const el of curlEls) {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < -80 || r.top > vh + 80) continue; // offscreen: skip
+        const center = r.top + r.height / 2;
+        const p = Math.max(-1, Math.min(1, (center - vh / 2) / vh)); // -1 top .. 1 bottom
+        const deg = (-p * CURL_MAX).toFixed(2);
+        el.style.transform = `perspective(1600px) rotateX(${deg}deg)`;
+      }
+    }
+    requestAnimationFrame(curlLoop);
+  })();
 
   // Badge spins with scroll position + a velocity kick; runs on its own rAF for smoothness
   let badgeAngle = 0;
@@ -911,74 +920,104 @@
     });
   })();
 
-  /* ───────────── CURSOR BLUR LENS (frosted glass follows pointer) ───────────── */
+  /* ───────────── HYPERSPACE WARP (time-travel streaks, driven by scroll velocity) ───────────── */
   (function () {
-    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const lens = document.getElementById('lens');
-    if (!fine || prefersReduced || !lens) return;
-    let mx = window.innerWidth / 2, my = window.innerHeight / 2, lx = mx, ly = my, shown = false;
-    window.addEventListener('pointermove', (e) => {
-      mx = e.clientX; my = e.clientY;
-      if (!shown) { shown = true; lens.style.opacity = '1'; lx = mx; ly = my; }
-      // grow the lens over interactive targets
-      const t = e.target;
-      if (t && t.closest && t.closest('a, button, [role="button"], .figure-frame, [data-cursor]')) lens.classList.add('big');
-      else lens.classList.remove('big');
-    });
-    document.addEventListener('pointerleave', () => { lens.style.opacity = '0'; shown = false; });
-    (function loop() {
-      lx += (mx - lx) * 0.14; ly += (my - ly) * 0.14;  // slight lag → a soft smear
-      lens.style.transform = `translate(${lx}px, ${ly}px)`;
-      requestAnimationFrame(loop);
-    })();
+    const canvas = document.getElementById('warp');
+    const dark = document.getElementById('warp-dark');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, Hh = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), cx = 0, cy = 0;
+    const HUES = [188, 205, 262, 280]; // cyan, blue, violet, purple — matches haoqi warp
+    const N = prefersReduced ? 0 : 150;
+    const stars = [];
+    function resize() {
+      W = window.innerWidth; Hh = window.innerHeight; cx = W / 2; cy = H2();
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(Hh * dpr);
+      canvas.style.width = W + 'px'; canvas.style.height = Hh + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function H2(){ return window.innerHeight / 2; }
+    function seed(s, atCenter) {
+      s.a = Math.random() * Math.PI * 2;
+      s.r = atCenter ? Math.random() * 30 : Math.random() * Math.max(W, Hh) * 0.7;
+      s.hue = HUES[(Math.random() * HUES.length) | 0];
+      s.w = 0.8 + Math.random() * 1.6;
+      s.spd = 0.6 + Math.random() * 1.4;
+    }
+    for (let i = 0; i < N; i++) { const s = {}; seed(s, false); stars.push(s); }
+
+    let intensity = 0; // eased warpBoost
+    function frame() {
+      intensity += (warpBoost - intensity) * 0.08;
+      const vis = intensity > 0.008;
+      canvas.style.opacity = vis ? '1' : '0';
+      if (dark) dark.style.opacity = (intensity * 0.72).toFixed(3);
+      if (vis && N) {
+        ctx.clearRect(0, 0, W, Hh);
+        const maxR = Math.hypot(W, Hh) * 0.62;
+        const speed = 4 + intensity * 42;
+        const len = 6 + intensity * 90;
+        for (const s of stars) {
+          s.r += speed * s.spd;
+          if (s.r > maxR) seed(s, true);
+          const ca = Math.cos(s.a), sa = Math.sin(s.a);
+          const x1 = cx + ca * s.r, y1 = cy + sa * s.r;
+          const rr = Math.max(0, s.r - len * s.spd);
+          const x2 = cx + ca * rr, y2 = cy + sa * rr;
+          const near = Math.min(1, s.r / maxR);
+          const alpha = Math.min(1, intensity * 0.35 + near * intensity * 0.9);
+          ctx.strokeStyle = `hsla(${s.hue}, 90%, 65%, ${alpha.toFixed(3)})`;
+          ctx.lineWidth = s.w * (0.5 + near);
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+      } else if (!vis) {
+        ctx.clearRect(0, 0, W, Hh);
+      }
+      warpBoost *= 0.90; // decays after each scroll spike → warp fades when you stop
+      requestAnimationFrame(frame);
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+    if (!prefersReduced) requestAnimationFrame(frame);
   })();
 
-  /* ───────────── FALLING DESIGN TOKENS (continuous drop) ───────────── */
+  /* ───────────── MOUSE TRAIL (comet smear following pointer) ───────────── */
   (function () {
-    const rain = document.getElementById('rain');
-    if (!rain || prefersReduced || window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
-    const WORDS = [
-      ['color/primary',''], ['radius/md','gold'], ['space/8','blue'], ['motion/ease',''],
-      ['color/ink-2','blue'], ['shadow/1','gold'], ['opacity/60','green'], ['border/hair',''],
-      ['z/overlay','blue'], ['size/lg','green'], ['line/1.5',''], ['◈ token','gold'],
-      ['font/mono','green'], ['ReDS','' ], ['DDS','blue'], ['theme/dark','']
-    ];
-    let H = window.innerHeight, W = window.innerWidth;
-    window.addEventListener('resize', () => { H = window.innerHeight; W = window.innerWidth; }, { passive: true });
-    const N = Math.max(8, Math.min(16, Math.floor(W / 130)));
-    const items = [];
-    for (let i = 0; i < N; i++) {
-      const [txt, cls] = WORDS[i % WORDS.length];
-      const el = document.createElement('span');
-      el.className = 'token' + (cls ? ' ' + cls : '');
-      el.innerHTML = `<i></i>${txt}`;
-      rain.appendChild(el);
-      items.push({
-        el,
-        x: Math.random() * W,
-        y: Math.random() * -H,
-        vy: 0.35 + Math.random() * 0.75,
-        sway: 14 + Math.random() * 26,
-        phase: Math.random() * Math.PI * 2,
-        rot: (Math.random() - 0.5) * 20,
-        vr: (Math.random() - 0.5) * 0.15
-      });
+    const canvas = document.getElementById('trail');
+    if (!canvas || prefersReduced || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, Hh = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function resize() {
+      W = window.innerWidth; Hh = window.innerHeight; dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(Hh * dpr);
+      canvas.style.width = W + 'px'; canvas.style.height = Hh + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    let running = true;
-    document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) tickRain(); });
-    function tickRain() {
-      if (!running) return;
-      for (const it of items) {
-        it.y += it.vy;
-        it.phase += 0.008;
-        it.rot += it.vr;
-        if (it.y > H + 50) { it.y = -50; it.x = Math.random() * W; it.vy = 0.35 + Math.random() * 0.75; }
-        const dx = Math.sin(it.phase) * it.sway;
-        it.el.style.transform = `translate3d(${(it.x + dx).toFixed(1)}px, ${it.y.toFixed(1)}px, 0) rotate(${it.rot.toFixed(1)}deg)`;
+    resize(); window.addEventListener('resize', resize, { passive: true });
+    const pts = [];
+    let mx = -100, my = -100, active = false;
+    window.addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; active = true; });
+    function accent() { return getComputedStyle(html).getPropertyValue('--accent').trim() || '#DC5A2A'; }
+    (function loop() {
+      // fade previous frame for a smear tail
+      ctx.clearRect(0, 0, W, Hh);
+      if (active) pts.push({ x: mx, y: my, life: 1 });
+      const col = accent();
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        p.life -= 0.045;
+        if (p.life <= 0) continue;
+        const r = 7 * p.life;
+        ctx.globalAlpha = p.life * 0.5;
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
       }
-      requestAnimationFrame(tickRain);
-    }
-    tickRain();
+      ctx.globalAlpha = 1;
+      while (pts.length && pts[0].life <= 0) pts.shift();
+      if (pts.length > 40) pts.splice(0, pts.length - 40);
+      requestAnimationFrame(loop);
+    })();
   })();
 
   /* ───────────── HALFTONE DOT-MATRIX BACKGROUND (replicates haoqi MaskedDotsEffect) ───────────── */
