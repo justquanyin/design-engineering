@@ -679,10 +679,9 @@
 <!-- Lenis smooth scroll -->
 <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
 <script>
-  /* ───────────── THEME (system / light / dark) ───────────── */
+  /* ───────────── THEME (light / dark only) ───────────── */
   const html = document.documentElement;
-  const themeStates = ['system', 'light', 'dark'];
-  const letterMap = { system: 'A', light: 'B', dark: 'C' };
+  const letterMap = { light: 'A', dark: 'B' };
   const themeLetter = document.getElementById('theme-letter');
   function setTheme(t) {
     html.classList.remove('system', 'light', 'dark');
@@ -690,10 +689,13 @@
     themeLetter.textContent = letterMap[t];
     try { localStorage.setItem('qy-theme', t); } catch(e) {}
   }
-  try { const s = localStorage.getItem('qy-theme'); setTheme(themeStates.includes(s) ? s : 'system'); } catch(e) { setTheme('system'); }
+  try {
+    const s = localStorage.getItem('qy-theme');
+    if (s === 'light' || s === 'dark') setTheme(s);
+    else setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  } catch(e) { setTheme('light'); }
   document.getElementById('theme-toggle').addEventListener('click', () => {
-    const now = themeStates.find(t => html.classList.contains(t)) || 'system';
-    setTheme(themeStates[(themeStates.indexOf(now) + 1) % themeStates.length]);
+    setTheme(html.classList.contains('dark') ? 'light' : 'dark');
   });
 
   /* ───────────── LENIS SMOOTH SCROLL ───────────── */
