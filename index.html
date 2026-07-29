@@ -927,8 +927,8 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let W = 0, Hh = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), cx = 0, cy = 0;
-    const HUES = [188, 205, 262, 280]; // cyan, blue, violet, purple — matches haoqi warp
-    const N = prefersReduced ? 0 : 150;
+    const HUES = [188, 200, 210, 262, 280]; // cyan, blue, violet, purple — matches haoqi warp
+    const N = prefersReduced ? 0 : 230;
     const stars = [];
     function resize() {
       W = window.innerWidth; Hh = window.innerHeight; cx = W / 2; cy = H2();
