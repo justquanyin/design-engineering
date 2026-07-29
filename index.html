@@ -318,9 +318,77 @@
   .rise { animation: rise 900ms var(--cubic-66) both; }
   .rise-1 { animation-delay: .05s; } .rise-2 { animation-delay: .16s; } .rise-3 { animation-delay: .30s; } .rise-4 { animation-delay: .44s; }
   @media (prefers-reduced-motion: reduce) { .reveal, .rise, .pin-word { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; } }
+
+  /* ═══════════════════════════════════════════════ CUSTOM CURSOR ═══════════════════════════════════════════════ */
+  .cursor { position: fixed; top: 0; left: 0; z-index: 300; pointer-events: none; opacity: 0; will-change: transform; transition: opacity .3s; }
+  .cursor-ring {
+    position: absolute; top: 0; left: 0;
+    width: 32px; height: 32px; margin: -16px 0 0 -16px;
+    border: 1.5px solid var(--label-1); border-radius: 999px;
+    transition: width .35s var(--cubic-66), height .35s var(--cubic-66), margin .35s var(--cubic-66), border-color .3s, opacity .3s, background-color .35s var(--cubic-66);
+  }
+  .cursor-dot {
+    position: absolute; top: 0; left: 0;
+    width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+    background: var(--accent); border-radius: 999px;
+    transition: opacity .3s, transform .35s var(--cubic-66);
+  }
+  .cursor-label {
+    position: absolute; top: 0; left: 0;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--bg); white-space: nowrap;
+    opacity: 0; transition: opacity .25s; font-weight: 500;
+  }
+  /* hovering an interactive target → ring grows, dot hides */
+  .cursor.is-hover .cursor-ring { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; }
+  .cursor.is-hover .cursor-dot { opacity: 0; }
+  .cursor.is-link  .cursor-ring { width: 70px; height: 70px; margin: -35px 0 0 -35px; background: var(--accent); border-color: var(--accent); }
+  .cursor.is-link  .cursor-dot  { opacity: 0; }
+  .cursor.is-link  .cursor-label { opacity: 1; }
+  html.cursor-on, html.cursor-on * { cursor: none !important; }
+  @media (hover: none), (pointer: coarse) { .cursor { display: none; } }
+
+  /* ═══════════════════════════════════════════════ ROTATING BADGE ═══════════════════════════════════════════════ */
+  .badge {
+    position: fixed; z-index: 40; left: 24px; bottom: 68px;
+    width: 96px; height: 96px; pointer-events: auto;
+    display: none;
+  }
+  @media (min-width: 1024px) { .badge { display: block; left: 44px; bottom: 96px; } }
+  .badge svg { display: block; width: 100%; height: 100%; }
+  .badge .ring-text { fill: var(--label-2); font-family: 'JetBrains Mono', monospace; font-size: 9.2px; letter-spacing: 0.28em; text-transform: uppercase; }
+  .badge .badge-core { fill: var(--accent); }
+  .badge .badge-rot { transform-box: fill-box; transform-origin: center; will-change: transform; }
+  .badge .badge-arrow { fill: var(--bg); }
+
+  /* magnetic wrap */
+  .mag { display: inline-block; will-change: transform; }
+
+  /* velocity skew target */
+  .skewable { will-change: transform; }
 </style>
 </head>
 <body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor" aria-hidden="true">
+  <div class="cursor-ring"></div>
+  <div class="cursor-dot"></div>
+  <span class="cursor-label" id="cursor-label"></span>
+</div>
+
+<!-- Rotating signature badge -->
+<a class="badge" id="badge" href="#contact" data-scroll data-cursor="say hi" aria-label="Available for work — get in touch">
+  <svg viewBox="0 0 100 100">
+    <g class="badge-rot">
+      <defs><path id="badge-circle" d="M 50,50 m -37,0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" /></defs>
+      <text class="ring-text"><textPath href="#badge-circle" startOffset="0">DESIGN · ENGINEERING · WATER · AI-NATIVE · </textPath></text>
+    </g>
+    <circle class="badge-core" cx="50" cy="50" r="20" />
+    <path class="badge-arrow" d="M45 55 L55 45 M55 45 H47 M55 45 V53" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</a>
 
 <!-- Halftone dot-matrix background -->
 <canvas id="dots" aria-hidden="true"></canvas>
@@ -595,7 +663,7 @@
     <div class="contact-links">
       <span></span>
       <div class="right">
-        <a href="https://github.com/justquanyin" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/justquanyin" target="_blank" rel="noopener noreferrer" data-cursor="github ↗">GitHub</a>
       </div>
     </div>
   </section>
@@ -675,12 +743,18 @@
     coordsEl.textContent = `${p(e.clientX)} X ${p(e.clientY)} Y`;
   });
 
-  /* ───────────── SCROLL-DRIVEN (indicator + pin) ───────────── */
+  /* ───────────── SCROLL-DRIVEN (indicator + pin + roll + badge) ───────────── */
   const scrollFill = document.getElementById('scroll-fill');
   const pinOuter = document.querySelector('.pin-outer');
   const pinWords = [document.getElementById('pin-1'), document.getElementById('pin-2'), document.getElementById('pin-3')];
+  const gridOverlay = document.querySelector('.grid-overlay svg');
+  const badgeRot = document.querySelector('.badge-rot');
+  let curScrollY = 0, lastScrollY = 0, scrollVel = 0;
   function onScroll() {
     const y = window.scrollY;
+    scrollVel = y - lastScrollY;
+    lastScrollY = y;
+    curScrollY = y;
     // indicator
     if (scrollFill) {
       const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -691,6 +765,8 @@
         scrollFill.setAttribute('d', `M 16 ${top.toFixed(1)} V ${(top + dot).toFixed(1)}`);
       }
     }
+    // blueprint grid parallax — drifts opposite to scroll, like a deeper plane
+    if (gridOverlay) gridOverlay.style.transform = `translateY(${(y * 0.04).toFixed(1)}px)`;
     // pin
     if (pinOuter) {
       const r = pinOuter.getBoundingClientRect();
@@ -706,6 +782,18 @@
   }
   onScroll();
   window.addEventListener('resize', onScroll, { passive: true });
+  if (!lenis) window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Badge spins with scroll position + a velocity kick; runs on its own rAF for smoothness
+  let badgeAngle = 0;
+  (function spinBadge() {
+    if (badgeRot) {
+      const target = curScrollY * 0.28 + scrollVel * 1.2;
+      badgeAngle += (target - badgeAngle) * 0.08;
+      badgeRot.style.transform = `rotate(${badgeAngle.toFixed(2)}deg)`;
+    }
+    requestAnimationFrame(spinBadge);
+  })();
 
   /* ───────────── REVEAL ───────────── */
   const io = new IntersectionObserver((entries) => {
@@ -721,6 +809,54 @@
     }, { threshold: 0.3 });
     sio.observe(sign);
   }
+
+  /* ───────────── CUSTOM CURSOR ───────────── */
+  (function () {
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!fine || prefersReduced) return;
+    const cur = document.getElementById('cursor');
+    const label = document.getElementById('cursor-label');
+    if (!cur) return;
+    html.classList.add('cursor-on');
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let cx = mx, cy = my, shown = false;
+    window.addEventListener('pointermove', (e) => {
+      mx = e.clientX; my = e.clientY;
+      if (!shown) { shown = true; cur.style.opacity = '1'; cx = mx; cy = my; }
+    });
+    document.addEventListener('pointerleave', () => { cur.style.opacity = '0'; shown = false; });
+    // hover targets
+    const linkSel = 'a, button, [role="button"], summary, [data-cursor]';
+    document.querySelectorAll(linkSel).forEach(el => {
+      el.addEventListener('pointerenter', () => {
+        const txt = el.getAttribute('data-cursor');
+        if (txt) { cur.classList.add('is-link'); label.textContent = txt; }
+        else cur.classList.add('is-hover');
+      });
+      el.addEventListener('pointerleave', () => { cur.classList.remove('is-hover', 'is-link'); label.textContent = ''; });
+    });
+    (function loop() {
+      cx += (mx - cx) * 0.2; cy += (my - cy) * 0.2;
+      cur.style.transform = `translate(${cx}px, ${cy}px)`;
+      requestAnimationFrame(loop);
+    })();
+  })();
+
+  /* ───────────── MAGNETIC ELEMENTS ───────────── */
+  (function () {
+    if (prefersReduced || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const els = document.querySelectorAll('.hud-btn, .contact-links a, .badge');
+    els.forEach(el => {
+      const strength = el.classList.contains('badge') ? 0.4 : 0.28;
+      el.addEventListener('pointermove', (e) => {
+        const r = el.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width / 2);
+        const dy = e.clientY - (r.top + r.height / 2);
+        el.style.transform = `translate(${(dx * strength).toFixed(1)}px, ${(dy * strength).toFixed(1)}px)`;
+      });
+      el.addEventListener('pointerleave', () => { el.style.transform = ''; el.style.transition = 'transform .4s var(--cubic-66)'; setTimeout(() => el.style.transition = '', 400); });
+    });
+  })();
 
   /* ───────────── HALFTONE DOT-MATRIX BACKGROUND (replicates haoqi MaskedDotsEffect) ───────────── */
   (function () {
@@ -778,7 +914,10 @@
       const rgb = inkRGB();
       const maxR = GRID * 0.42;
 
-      for (let gy = GRID / 2; gy < H; gy += GRID) {
+      // Scroll-driven vertical roll — the dot field turns like a drum as the page scrolls.
+      const roll = ((-curScrollY * 0.16) % GRID + GRID) % GRID;
+
+      for (let gy = GRID / 2 - GRID + roll; gy < H + GRID; gy += GRID) {
         for (let gx = GRID / 2; gx < W; gx += GRID) {
           // normalized coords relative to drifting focus, in [-1,1]-ish
           let px = (gx - cx) / (W / 2);
