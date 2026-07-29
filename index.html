@@ -920,69 +920,107 @@
     });
   })();
 
-  /* ───────────── HYPERSPACE WARP (time-travel streaks, driven by scroll velocity) ───────────── */
+  /* ───────────── HYPERSPACE WARP — real WebGL light-speed tunnel (depth · glow · chromatic dispersion) ───────────── */
   (function () {
     const canvas = document.getElementById('warp');
     const dark = document.getElementById('warp-dark');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let W = 0, Hh = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), cx = 0, cy = 0;
-    const HUES = [188, 200, 210, 262, 280]; // cyan, blue, violet, purple — matches haoqi warp
-    const N = prefersReduced ? 0 : 230;
-    const stars = [];
+    if (!canvas || prefersReduced) return;
+    const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: false, antialias: true, depth: false });
+    if (!gl) return; // graceful: no warp if WebGL unavailable
+    if (dark) dark.style.display = 'none'; // shader draws its own veil
+
+    const VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.0,1.0); }';
+    const FS = [
+      'precision highp float;',
+      'uniform vec2 uRes; uniform float uTime; uniform float uInt;',
+      'float hash(float n){ return fract(sin(n)*43758.5453123); }',
+      // streak brightness for one channel with radial dispersion offset
+      'float rays(vec2 uv, float disp){',
+      '  float ang = atan(uv.y, uv.x);',
+      '  float rad = length(uv) * (1.0 + disp);',
+      '  const float N = 160.0;',
+      '  float fa = (ang/6.28318530718 + 0.5) * N;',
+      '  float id = floor(fa);',
+      '  float fr = fract(fa) - 0.5;',
+      '  float r1 = hash(id); float r2 = hash(id+91.7);',
+      '  float speed = 0.12 + uInt*1.7;',
+      '  float phase = fract(r1 + uTime*speed*(0.55 + r2*0.9));',
+      '  float along = phase - rad;',                      // tail behind the head
+      '  float tail = 0.10 + uInt*0.55;',
+      '  float streak = smoothstep(0.0, 0.012, along) * smoothstep(tail, 0.0, along);',
+      '  float thin = exp(-fr*fr*(240.0 - uInt*150.0));',  // sharpen the ray line
+      '  float centerFade = smoothstep(0.010, 0.17, rad);',
+      '  return streak * thin * centerFade;',
+      '}',
+      'void main(){',
+      '  vec2 uv = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;',
+      '  float disp = 0.010 * uInt + 0.002;',
+      '  float rr = rays(uv, -disp);',
+      '  float gg = rays(uv, 0.0);',
+      '  float bb = rays(uv, disp);',
+      '  vec3 tint = vec3(0.32,0.86,1.0);',                 // cyan core
+      '  vec3 col = vec3(rr,gg,bb) * tint * (1.5 + uInt*1.2);',
+      '  col += vec3(bb*0.45, 0.0, bb*0.75);',              // violet fringe outward
+      '  float bright = max(max(rr,gg),bb);',
+      '  float veil = uInt*0.72;',
+      '  vec3 dark = vec3(0.015,0.02,0.045);',
+      '  vec3 outc = dark*veil + col;',
+      '  float alpha = clamp(veil + bright*1.25, 0.0, 1.0);',
+      '  gl_FragColor = vec4(outc, alpha);',
+      '}'
+    ].join('\n');
+
+    function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uRes = gl.getUniformLocation(prog, 'uRes');
+    const uTime = gl.getUniformLocation(prog, 'uTime');
+    const uInt = gl.getUniformLocation(prog, 'uInt');
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    let W = 0, Hh = 0, dpr = 1;
     function resize() {
-      W = window.innerWidth; Hh = window.innerHeight; cx = W / 2; cy = H2();
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; Hh = window.innerHeight; dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(Hh * dpr);
       canvas.style.width = W + 'px'; canvas.style.height = Hh + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    function H2(){ return window.innerHeight / 2; }
-    function seed(s, atCenter) {
-      s.a = Math.random() * Math.PI * 2;
-      s.r = atCenter ? Math.random() * 30 : Math.random() * Math.max(W, Hh) * 0.7;
-      s.hue = HUES[(Math.random() * HUES.length) | 0];
-      s.w = 0.8 + Math.random() * 1.6;
-      s.spd = 0.6 + Math.random() * 1.4;
-    }
-    for (let i = 0; i < N; i++) { const s = {}; seed(s, false); stars.push(s); }
-
-    let intensity = 0; // eased warpBoost
-    function frame() {
-      intensity += (warpBoost - intensity) * 0.08;
-      const vis = intensity > 0.008;
-      canvas.style.opacity = vis ? '1' : '0';
-      if (dark) dark.style.opacity = (intensity * 0.72).toFixed(3);
-      if (vis && N) {
-        ctx.clearRect(0, 0, W, Hh);
-        const maxR = Math.hypot(W, Hh) * 0.62;
-        const speed = 4 + intensity * 42;
-        const len = 6 + intensity * 90;
-        for (const s of stars) {
-          s.r += speed * s.spd;
-          if (s.r > maxR) seed(s, true);
-          const ca = Math.cos(s.a), sa = Math.sin(s.a);
-          const x1 = cx + ca * s.r, y1 = cy + sa * s.r;
-          const rr = Math.max(0, s.r - len * s.spd);
-          const x2 = cx + ca * rr, y2 = cy + sa * rr;
-          const near = Math.min(1, s.r / maxR);
-          const alpha = Math.min(1, intensity * 0.35 + near * intensity * 0.9);
-          ctx.strokeStyle = `hsla(${s.hue}, 90%, 65%, ${alpha.toFixed(3)})`;
-          ctx.lineWidth = s.w * (0.5 + near);
-          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-        }
-      } else if (!vis) {
-        ctx.clearRect(0, 0, W, Hh);
-      }
-      warpBoost *= 0.90; // decays after each scroll spike → warp fades when you stop
-      requestAnimationFrame(frame);
+      gl.viewport(0, 0, canvas.width, canvas.height);
     }
     resize();
     window.addEventListener('resize', resize, { passive: true });
-    if (!prefersReduced) requestAnimationFrame(frame);
+
+    let intensity = 0, t0 = null;
+    function frame(ts) {
+      if (t0 === null) t0 = ts;
+      const time = (ts - t0) / 1000;
+      intensity += (warpBoost - intensity) * 0.09;
+      const vis = intensity > 0.006;
+      canvas.style.opacity = vis ? '1' : '0';
+      if (vis) {
+        gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.uniform1f(uTime, time);
+        gl.uniform1f(uInt, Math.min(1, intensity));
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+      warpBoost *= 0.905; // decays → warp fades when scrolling stops
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   })();
 
-  /* ───────────── MOUSE TRAIL (comet smear following pointer) ───────────── */
+  /* ───────────── MOUSE TRAIL — fluid tapered smear with glow ───────────── */
   (function () {
     const canvas = document.getElementById('trail');
     if (!canvas || prefersReduced || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
@@ -995,27 +1033,34 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize(); window.addEventListener('resize', resize, { passive: true });
-    const pts = [];
-    let mx = -100, my = -100, active = false;
-    window.addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; active = true; });
+    const pts = [];               // {x,y} history
+    let mx = -100, my = -100, tx = -100, ty = -100, active = false, speed = 0;
+    window.addEventListener('pointermove', (e) => { tx = e.clientX; ty = e.clientY; active = true; });
     function accent() { return getComputedStyle(html).getPropertyValue('--accent').trim() || '#DC5A2A'; }
     (function loop() {
-      // fade previous frame for a smear tail
       ctx.clearRect(0, 0, W, Hh);
-      if (active) pts.push({ x: mx, y: my, life: 1 });
-      const col = accent();
-      for (let i = 0; i < pts.length; i++) {
-        const p = pts[i];
-        p.life -= 0.045;
-        if (p.life <= 0) continue;
-        const r = 7 * p.life;
-        ctx.globalAlpha = p.life * 0.5;
-        ctx.fillStyle = col;
-        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+      // inertial follow → the smear lags & eases like fluid
+      const nx = mx + (tx - mx) * 0.35, ny = my + (ty - my) * 0.35;
+      speed = speed * 0.8 + Math.hypot(nx - mx, ny - my) * 0.2;
+      mx = nx; my = ny;
+      if (active) pts.push({ x: mx, y: my });
+      if (pts.length > 26) pts.shift();
+      if (pts.length > 2) {
+        const col = accent();
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.shadowColor = col;
+        for (let i = 1; i < pts.length; i++) {
+          const f = i / pts.length;                 // 0 tail → 1 head
+          const w = (1.5 + speed * 0.35) * f * f;    // taper: thin tail, fatter fast head
+          ctx.strokeStyle = col;
+          ctx.globalAlpha = 0.06 + f * 0.5;
+          ctx.shadowBlur = 10 * f;
+          ctx.lineWidth = Math.max(0.4, w);
+          ctx.beginPath(); ctx.moveTo(pts[i - 1].x, pts[i - 1].y); ctx.lineTo(pts[i].x, pts[i].y); ctx.stroke();
+        }
+        ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.globalCompositeOperation = 'source-over';
       }
-      ctx.globalAlpha = 1;
-      while (pts.length && pts[0].life <= 0) pts.shift();
-      if (pts.length > 40) pts.splice(0, pts.length - 40);
       requestAnimationFrame(loop);
     })();
   })();
