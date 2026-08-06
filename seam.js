@@ -1,17 +1,23 @@
-// Figma → code seam. Drives the panel that replaced the hyperspace warp: each
-// Figma layer row dims and fires a packet down the rail; the packet lands on the
-// matching code line, which then wipes in.
+// Figma → code seam. Owns the panel that replaced the hyperspace warp: each Figma
+// layer row dims and fires a packet down the rail; the packet lands on the matching
+// code line, which then wipes in.
 //
-// Scroll maps to a damped value rather than driving the frame directly — raw
-// scroll mapping felt notchy, especially against the WebGL scene's frame budget.
-// Hovering the panel runs the same transition to completion, so the payoff does
-// not depend on finding the right scroll position.
+// The markup lives here rather than in the bundle on purpose. The section component
+// re-renders on every scroll frame, so a dangerouslySetInnerHTML child was being torn
+// down and rebuilt each time — 177 childList mutations over a handful of wheel steps —
+// which wiped the inline styles this file writes and left the panel frozen for anyone
+// who arrived by scrolling. React now renders an empty .seam-host and never touches
+// its children; everything inside is ours.
 //
-// Two constraints shape this file:
-//  - The panel is injected with dangerouslySetInnerHTML, so React can swap the
-//    nodes out during hydration. References are re-acquired when they go stale.
-//  - The loop reads layout at most once per frame (one getBoundingClientRect) and
-//    writes nothing but transform / opacity / clip-path. It idles when off-screen.
+// Scroll maps to a damped value rather than driving the frame directly — raw scroll
+// mapping read notchy against the WebGL scene's frame budget. Hovering the panel runs
+// the same transition to completion, so the payoff does not depend on finding the
+// right scroll position.
+//
+// The loop reads layout at most once per frame (one getBoundingClientRect) and writes
+// nothing but transform / opacity / clip-path. Off-screen it bails on that same rect;
+// an IntersectionObserver looked cheaper but never reported the section visible under
+// Lenis's smooth scrolling.
 (function () {
   'use strict';
 
@@ -22,26 +28,78 @@
   var EASE_IN = 0.14;   // damping toward the scroll target
   var HOVER_EASE = 0.09;
 
+  var ROWS = [
+    ['frame', 'Card', 'frame'],
+    ['fill', 'water-16', 'icon'],
+    ['token', 'label-1', 'style'],
+    ['text', '"Water"', 'text'],
+    ['token', 'radius/md', 'var'],
+    ['token', 'space/4', 'var'],
+  ];
+
+  var LINES = [
+    '<b>&lt;</b>Card <i>radius</i><b>=</b><b>"md"</b> <i>padding</i><b>=</b><b>"4"</b><b>&gt;</b>',
+    '&nbsp;&nbsp;<b>&lt;</b>Icon <i>name</i><b>=</b><b>"water-16"</b> <b>/&gt;</b>',
+    '&nbsp;&nbsp;<b>&lt;</b>Text <i>token</i><b>=</b><b>"label-1"</b><b>&gt;</b>',
+    '&nbsp;&nbsp;&nbsp;&nbsp;Water',
+    '&nbsp;&nbsp;<b>&lt;/</b>Text<b>&gt;</b>',
+    '<b>&lt;/</b>Card<b>&gt;</b>',
+  ];
+
+  function markup() {
+    var rows = ROWS.map(function (r) {
+      return '<div class="seam__row"><span class="seam__glyph seam__glyph--' + r[0] + '"></span>'
+        + '<span class="seam__name">' + r[1] + '</span>'
+        + '<span class="seam__kind">' + r[2] + '</span></div>';
+    }).join('');
+    var beams = ROWS.map(function () { return '<span class="seam__beam"><i></i></span>'; }).join('');
+    var code = LINES.map(function (l, i) {
+      return '<div class="seam__line"><span class="seam__gutter">' + (i + 1) + '</span>'
+        + '<span class="seam__src">' + l + '</span></div>';
+    }).join('');
+    return '<div class="seam" aria-hidden="true">'
+      + '<div class="seam__panel seam__panel--design">'
+      + '<div class="seam__head"><span>Figma · layers</span><span class="seam__dot"></span></div>'
+      + '<div class="seam__rows">' + rows + '</div></div>'
+      + '<div class="seam__gap"><span class="seam__rail"></span>'
+      + '<div class="seam__beams">' + beams + '</div></div>'
+      + '<div class="seam__panel seam__panel--code">'
+      + '<div class="seam__head"><span>VSCode · delight</span><span class="seam__dot"></span></div>'
+      + '<div class="seam__code">' + code + '</div></div></div>'
+      + '<div class="seam__caption"><span>The Figma–code seam</span>'
+      + '<span>Design that survives the build</span></div>';
+  }
+
   function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   function smooth(t) { return t * t * (3 - 2 * t); }
 
   function acquire() {
-    var seam = document.querySelector('.seam');
-    if (!seam || !seam.isConnected) return null;
-    var rows = [].slice.call(seam.querySelectorAll('.seam__row'));
-    var beams = [].slice.call(seam.querySelectorAll('.seam__beam i'));
-    var gutters = [].slice.call(seam.querySelectorAll('.seam__gutter'));
-    var srcs = [].slice.call(seam.querySelectorAll('.seam__src'));
-    var gap = seam.querySelector('.seam__gap');
-    var sticky = seam.closest('.seam-stage');
-    var track = sticky && sticky.parentElement;
-    if (!rows.length || !track || !gap || rows.length !== srcs.length) return null;
-    return { seam: seam, rows: rows, beams: beams, gutters: gutters, srcs: srcs, gap: gap, track: track };
+    var host = document.querySelector('.seam-host');
+    if (!host || !host.isConnected) return null;
+
+    // Do not fill the host before React has hydrated — this file is deferred, so it
+    // runs first, and children React did not expect are a hydration mismatch (#418).
+    // The sticky wrapper ships with min-height:1px and gets the real viewport height
+    // once React renders, which makes a cheap and deterministic "hydrated" signal.
+    var stage = host.closest('.seam-stage');
+    if (!stage || !(parseFloat(stage.style.minHeight) > 10)) return null;
+
+    if (!host.querySelector('.seam')) host.innerHTML = markup();
+
+    var seam = host.querySelector('.seam');
+    var rows = [].slice.call(host.querySelectorAll('.seam__row'));
+    var beams = [].slice.call(host.querySelectorAll('.seam__beam i'));
+    var gutters = [].slice.call(host.querySelectorAll('.seam__gutter'));
+    var srcs = [].slice.call(host.querySelectorAll('.seam__src'));
+    var gap = host.querySelector('.seam__gap');
+    var track = stage.parentElement;
+    if (!seam || !rows.length || !track || !gap) return null;
+    return { host: host, seam: seam, rows: rows, beams: beams, gutters: gutters, srcs: srcs, gap: gap, track: track };
   }
 
   // The packet column has to line up with the layer rows, but its offset depends on
   // the panel's border/padding/head metrics. Measure it instead of hard-coding — once
-  // here and again on resize, never in the animation loop.
+  // on setup and again on resize, never in the animation loop.
   function align(r) {
     var gapTop = r.gap.getBoundingClientRect().top;
     var rowTop = r.rows[0].getBoundingClientRect().top;
@@ -50,8 +108,6 @@
 
   var canHover = !window.matchMedia || window.matchMedia('(hover: hover)').matches;
   var refs = null;
-  var visible = true;
-  var observer = null;
   var shown = 0;        // damped value actually rendered
   var hover = 0;        // damped hover contribution
   var hoverTarget = 0;
@@ -61,13 +117,6 @@
     if (!canHover) return;
     r.seam.addEventListener('pointerenter', function () { hoverTarget = 1; });
     r.seam.addEventListener('pointerleave', function () { hoverTarget = 0; });
-  }
-
-  function observe(r) {
-    if (observer) observer.disconnect();
-    observer = new IntersectionObserver(function (e) { visible = e[0].isIntersecting; },
-      { rootMargin: '200px 0px' });
-    observer.observe(r.track);
   }
 
   function render(r, progress) {
@@ -96,17 +145,16 @@
   function frame() {
     requestAnimationFrame(frame);
 
-    if (!refs || !refs.rows[0].isConnected) {
+    if (!refs || !refs.host.isConnected || !refs.rows[0].isConnected) {
       refs = acquire();
       painted = -1;
       if (!refs) return;
-      observe(refs);
       align(refs);
       bind(refs);
     }
-    if (!visible) return;
 
     var rect = refs.track.getBoundingClientRect();          // the only layout read
+    if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
     var range = rect.height - window.innerHeight;
     var raw = range > 0 ? clamp01(-rect.top / range) : 0;
 
