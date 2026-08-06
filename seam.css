@@ -1,0 +1,139 @@
+/* Figma → code seam: the scroll-driven panel that replaced the hyperspace warp.
+   Layout and colours ride on the app's own theme tokens so it follows light/dark. */
+
+.seam {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 96px 1fr;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  font-family: "tiktok", system-ui, sans-serif;
+  text-transform: none;
+  font-variation-settings: normal;
+}
+
+.seam__panel {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--background-elevated) 70%, transparent);
+  backdrop-filter: blur(6px);
+  padding: 14px 14px 16px;
+  min-height: 268px;
+}
+
+.seam__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "tronica-mono", monospace;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  padding-bottom: 11px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.seam__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--selection-bg); }
+
+/* ---------- left: figma layer rows ---------- */
+
+.seam__rows { display: flex; flex-direction: column; gap: 8px; }
+
+.seam__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--background-1);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--label-1);
+  transform-origin: right center;
+  will-change: transform, opacity;
+}
+.seam__glyph {
+  width: 15px; height: 15px; flex: none;
+  border-radius: 3px;
+  border: 1.5px solid var(--label-3);
+}
+.seam__glyph--fill { background: var(--selection-bg); border-color: transparent; }
+.seam__glyph--text { border-radius: 50%; }
+.seam__glyph--token { border-style: dashed; }
+.seam__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seam__kind {
+  font-family: "tronica-mono", monospace;
+  font-size: 10px; text-transform: uppercase;
+  color: var(--label-3);
+}
+
+/* ---------- middle: the seam itself ---------- */
+
+.seam__gap { position: relative; align-self: stretch; }
+.seam__rail {
+  position: absolute; left: 50%; top: 6%; bottom: 6%;
+  width: 1px; transform: translateX(-50%);
+  background: linear-gradient(to bottom, transparent, var(--line) 12%, var(--line) 88%, transparent);
+}
+.seam__spark {
+  position: absolute; left: 50%; top: 0;
+  width: 7px; height: 7px; margin-left: -3.5px; margin-top: -3.5px;
+  border-radius: 50%; background: var(--selection-bg);
+  opacity: 0;
+}
+
+/* ---------- right: code lines ---------- */
+
+.seam__code {
+  display: flex; flex-direction: column; gap: 8px;
+  font-family: "mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 30px;
+}
+.seam__line {
+  display: flex; align-items: center; gap: 10px;
+  height: 30px;
+  color: var(--label-1);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.seam__gutter {
+  width: 18px; flex: none; text-align: right;
+  font-family: "tronica-mono", monospace; font-size: 10px;
+  color: var(--label-4, var(--label-3));
+}
+.seam__code b { font-weight: 400; color: var(--label-2); }
+.seam__code i { font-style: normal; color: var(--selection-bg); filter: brightness(.8) saturate(1.4); }
+.dark .seam__code i { filter: none; }
+
+/* ---------- caption ---------- */
+
+.seam__caption {
+  margin: 26px auto 0;
+  width: 100%;
+  max-width: 1180px;
+  font-family: "tronica-mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  display: flex; justify-content: space-between; gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .seam { grid-template-columns: 1fr; gap: 12px; max-width: 520px; }
+  .seam__gap { height: 34px; align-self: auto; }
+  .seam__rail { left: 6%; right: 6%; top: 50%; bottom: auto; width: auto; height: 1px;
+    transform: translateY(-50%);
+    background: linear-gradient(to right, transparent, var(--line) 12%, var(--line) 88%, transparent); }
+  .seam__panel { min-height: 0; }
+  .seam__caption { flex-direction: column; gap: 4px; }
+}
