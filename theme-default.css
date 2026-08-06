@@ -1,0 +1,34 @@
+/* Dark by default.
+
+   The theme provider adds .light / .dark to <html> in an effect, i.e. after
+   hydration. Until then no class is present and the app's own :root block paints
+   the light theme. These rules cover that gap with the dark token values — the
+   same ones the app's .dark block uses — so a fresh visitor never sees a flash of
+   light. Once the provider sets a class, its rules take over and this stops
+   matching. Doing it here rather than from a boot script keeps React's <html>
+   node untouched, which a pre-hydration classList.add would break. */
+
+:root:not(.light):not(.dark) {
+  color-scheme: dark;
+  --label: 255, 255, 255;
+  --label-d: 230, 232, 232;
+  --background-deep: 15, 17, 17;
+  --label-1: rgba(var(--label), 1);
+  --label-2: rgba(var(--label-d), 0.6);
+  --label-3: rgba(var(--label-d), 0.32);
+  --label-4: rgba(var(--label-d), 0.16);
+  --line: rgba(var(--label-d), 0.08);
+  --background-1: rgb(var(--background-deep));
+  --background-elevated: #191b1b;
+  --code-comment: rgba(var(--label-d), 0.5);
+  --code-string: #80daac;
+  --code-number: #ebc669;
+  --code-keyword: #afb6ff;
+  --code-function: #8dcbff;
+  --code-tag: #ffa3a3;
+  --code-operator: rgba(var(--label-d), 0.85);
+}
+
+:root:not(.light):not(.dark) body {
+  background: var(--background-1);
+}

@@ -1,12 +1,16 @@
 /* Figma → code seam: the scroll-driven panel that replaced the hyperspace warp.
-   Layout and colours ride on the app's own theme tokens so it follows light/dark. */
+   Layout and colours ride on the app's own theme tokens so it follows light/dark.
+   Everything that animates is transform / opacity / clip-path only, so the work
+   stays on the compositor while the WebGL scene keeps the main thread busy. */
 
 .seam {
+  --seam-row-h: 30px;
+  --seam-row-gap: 8px;
+  --seam-head-h: 49px;      /* panel padding-top + head + rule + margin */
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 96px 1fr;
-  align-items: center;
-  gap: 0;
+  grid-template-columns: 1fr 132px 1fr;
+  align-items: start;
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
@@ -19,16 +23,15 @@
   position: relative;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--background-elevated) 70%, transparent);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--background-elevated) 68%, transparent);
   padding: 14px 14px 16px;
-  min-height: 268px;
 }
 
 .seam__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 11px;
   font-family: "tronica-mono", monospace;
   font-size: 11px;
   line-height: 1;
@@ -43,13 +46,13 @@
 
 /* ---------- left: figma layer rows ---------- */
 
-.seam__rows { display: flex; flex-direction: column; gap: 8px; }
+.seam__rows { display: flex; flex-direction: column; gap: var(--seam-row-gap); }
 
 .seam__row {
   display: flex;
   align-items: center;
   gap: 9px;
-  height: 30px;
+  height: var(--seam-row-h);
   padding: 0 9px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -57,7 +60,6 @@
   font-size: 13px;
   line-height: 1;
   color: var(--label-1);
-  transform-origin: right center;
   will-change: transform, opacity;
 }
 .seam__glyph {
@@ -75,44 +77,64 @@
   color: var(--label-3);
 }
 
-/* ---------- middle: the seam itself ---------- */
+/* ---------- middle: the seam and its packets ---------- */
 
 .seam__gap { position: relative; align-self: stretch; }
 .seam__rail {
-  position: absolute; left: 50%; top: 6%; bottom: 6%;
+  position: absolute; left: 50%; top: var(--seam-head-h); bottom: 16px;
   width: 1px; transform: translateX(-50%);
-  background: linear-gradient(to bottom, transparent, var(--line) 12%, var(--line) 88%, transparent);
+  background: linear-gradient(to bottom, transparent, var(--line) 14%, var(--line) 86%, transparent);
 }
-.seam__spark {
-  position: absolute; left: 50%; top: 0;
-  width: 7px; height: 7px; margin-left: -3.5px; margin-top: -3.5px;
-  border-radius: 50%; background: var(--selection-bg);
+
+/* One slot per row, on the same vertical rhythm, so a packet leaving row i arrives
+   exactly on code line i. The top offset is measured once by seam.js and written to
+   --seam-beam-offset; the fallback only has to be close enough for first paint. */
+.seam__beams {
+  position: absolute; inset: 0;
+  padding: var(--seam-beam-offset, var(--seam-head-h)) 6px 0;
+  display: flex; flex-direction: column; gap: var(--seam-row-gap);
+}
+.seam__beam { position: relative; height: var(--seam-row-h); }
+.seam__beam i {
+  position: absolute; left: 0; top: 50%;
+  width: 100%; height: 2px; margin-top: -1px;
+  border-radius: 1px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--selection-bg) 15%, transparent),
+    var(--selection-bg));
+  transform-origin: left center;
+  transform: scaleX(0);
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 /* ---------- right: code lines ---------- */
 
 .seam__code {
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: var(--seam-row-gap);
   font-family: "mono", ui-monospace, monospace;
   font-size: 13px;
-  line-height: 30px;
 }
 .seam__line {
   display: flex; align-items: center; gap: 10px;
-  height: 30px;
+  height: var(--seam-row-h);
   color: var(--label-1);
-  opacity: 0;
-  will-change: opacity, transform;
 }
 .seam__gutter {
   width: 18px; flex: none; text-align: right;
   font-family: "tronica-mono", monospace; font-size: 10px;
-  color: var(--label-4, var(--label-3));
+  color: var(--label-3);
+  opacity: 0;
+  will-change: opacity;
+}
+.seam__src {
+  white-space: pre;
+  clip-path: inset(0 100% 0 0);
+  will-change: clip-path;
 }
 .seam__code b { font-weight: 400; color: var(--label-2); }
-.seam__code i { font-style: normal; color: var(--selection-bg); filter: brightness(.8) saturate(1.4); }
-.dark .seam__code i { filter: none; }
+.seam__code i { font-style: normal; color: #7a9e00; }
+.dark .seam__code i { color: var(--selection-bg); }
 
 /* ---------- caption ---------- */
 
@@ -128,12 +150,18 @@
   display: flex; justify-content: space-between; gap: 16px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .seam__src { clip-path: none !important; }
+  .seam__gutter { opacity: 1 !important; }
+  .seam__beam i { opacity: 0 !important; }
+}
+
 @media (max-width: 900px) {
-  .seam { grid-template-columns: 1fr; gap: 12px; max-width: 520px; }
-  .seam__gap { height: 34px; align-self: auto; }
-  .seam__rail { left: 6%; right: 6%; top: 50%; bottom: auto; width: auto; height: 1px;
+  .seam { grid-template-columns: 1fr; max-width: 520px; }
+  .seam__gap { height: 30px; align-self: auto; }
+  .seam__rail { left: 12%; right: 12%; top: 50%; bottom: auto; width: auto; height: 1px;
     transform: translateY(-50%);
-    background: linear-gradient(to right, transparent, var(--line) 12%, var(--line) 88%, transparent); }
-  .seam__panel { min-height: 0; }
+    background: linear-gradient(to right, transparent, var(--line) 14%, var(--line) 86%, transparent); }
+  .seam__beams { display: none; }
   .seam__caption { flex-direction: column; gap: 4px; }
 }
